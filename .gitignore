@@ -1,0 +1,54 @@
+# ---- Java / Gradle ----
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.log
+*.zip
+*.tar.gz
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+# ---- Spring Boot ----
+target/
+out/
+
+# ---- Node / NPM / React ----
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- IntelliJ ----
+.idea/
+*.iws
+*.ipr
+
+# JetBrains specific
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# ---- macOS ----
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+__MACOSX/
+
+# ---- VSCode ----
+.vscode/
+
+# ---- Logs ----
+logs/
+*.log
+log/
