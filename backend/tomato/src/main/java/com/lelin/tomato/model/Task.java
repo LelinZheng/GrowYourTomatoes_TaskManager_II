@@ -1,7 +1,9 @@
 package com.lelin.tomato.model;
 
+
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,16 +24,27 @@ public class Task {
 
   private String description;
 
+  @Builder.Default
   @Enumerated(EnumType.STRING)
-  private ImportanceLevel importance = ImportanceLevel.MEDIUM;
+  @Column(nullable = false)
+  private Priority priority = Priority.MEDIUM;
 
-  private boolean completed = false;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-  private LocalDateTime createdAt = LocalDateTime.now();
+  // Due time for time bomber
+  private LocalDateTime dueTime;
 
-  private LocalDateTime completedAt;
+  // Has the task missed its dueTime?
+  @Column(nullable = false)
+  private boolean expired;
 
-  private LocalDateTime timeBomber;
+  // Whether time bomber should track this
+  @Column(nullable = false)
+  private boolean timeBombEnabled;
+
+  @Column(nullable = false)
+  private boolean completed;
 
   @Column(nullable = false)
   private Long userId;

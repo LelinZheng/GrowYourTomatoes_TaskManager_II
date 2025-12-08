@@ -40,9 +40,4 @@ public class TaskController {
   public void deleteTask(@PathVariable Long id) {
     taskService.deleteTask(id, getLoggedInUserId());
   }
-
-  @PutMapping("/{id}/complete")
-  public Task completeTask(@PathVariable Long id) {
-    return taskService.completeTask(id, getLoggedInUserId());
-  }
 }

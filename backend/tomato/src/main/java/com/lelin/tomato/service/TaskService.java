@@ -12,56 +12,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TaskService {
 
-  private final TaskRepository taskRepo;
+  private final TaskRepository taskRepository;
 
   public Task createTask(Task task, Long userId) {
     task.setUserId(userId);
     task.setCreatedAt(LocalDateTime.now());
-    return taskRepo.save(task);
+    task.setCompleted(false);
+    task.setExpired(false);
+
+    // If dueTime is null, timeBomber should not trigger
+    task.setTimeBombEnabled(task.getDueTime() != null);
+
+    return taskRepository.save(task);
   }
 
   public List<Task> getTasks(Long userId) {
-    return taskRepo.findByUserId(userId);
+    return taskRepository.findByUserId(userId);
   }
 
-  public Task updateTask(Long taskId, Task updated, Long userId) {
-    Task existing = taskRepo.findById(taskId)
-        .orElseThrow(() -> new RuntimeException("Task not found"));
-
-    if (!existing.getUserId().equals(userId)) {
-      throw new RuntimeException("Unauthorized");
-    }
-
-    existing.setTitle(updated.getTitle());
-    existing.setDescription(updated.getDescription());
-    existing.setImportance(updated.getImportance());
-    existing.setTimeBomber(updated.getTimeBomber());
-
-    return taskRepo.save(existing);
-  }
-
-  public void deleteTask(Long taskId, Long userId) {
-    Task task = taskRepo.findById(taskId)
+  public Task updateTask(Long id, Task updatedTask, Long userId) {
+    Task task = taskRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Task not found"));
 
     if (!task.getUserId().equals(userId)) {
       throw new RuntimeException("Unauthorized");
     }
 
-    taskRepo.delete(task);
+    task.setTitle(updatedTask.getTitle());
+    task.setDescription(updatedTask.getDescription());
+    task.setPriority(updatedTask.getPriority());
+    task.setDueTime(updatedTask.getDueTime());
+
+    // Auto-set if timeBombEnabled should be turned on/off
+    task.setTimeBombEnabled(updatedTask.getDueTime() != null);
+
+    return taskRepository.save(task);
   }
 
-  public Task completeTask(Long taskId, Long userId) {
-    Task task = taskRepo.findById(taskId)
+  public void deleteTask(Long id, Long userId) {
+    Task task = taskRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Task not found"));
 
     if (!task.getUserId().equals(userId)) {
       throw new RuntimeException("Unauthorized");
     }
 
-    task.setCompleted(true);
-    task.setCompletedAt(LocalDateTime.now());
-    return taskRepo.save(task);
+    taskRepository.delete(task);
   }
 }
+
 

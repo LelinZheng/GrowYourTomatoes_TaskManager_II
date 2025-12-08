@@ -1,8 +1,7 @@
 package com.lelin.tomato.model;
 
-public enum ImportanceLevel {
+public enum Priority {
   LOW,
   MEDIUM,
-  HIGH,
-  CRITICAL
+  HIGH
 }
