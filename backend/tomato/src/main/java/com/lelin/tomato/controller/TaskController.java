@@ -36,6 +36,11 @@ public class TaskController {
     return taskService.updateTask(id, task, getLoggedInUserId());
   }
 
+  @PutMapping("/{id}/complete")
+  public Task completeTask(@PathVariable Long id) {
+    return taskService.completeTask(id, getLoggedInUserId());
+  }
+
   @DeleteMapping("/{id}")
   public void deleteTask(@PathVariable Long id) {
     taskService.deleteTask(id, getLoggedInUserId());

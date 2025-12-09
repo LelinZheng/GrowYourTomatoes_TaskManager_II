@@ -2,6 +2,7 @@ package com.lelin.tomato.service;
 
 import com.lelin.tomato.model.Task;
 import com.lelin.tomato.repository.TaskRepository;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,8 @@ import java.util.List;
 public class TaskService {
 
   private final TaskRepository taskRepository;
+  private final PunishmentService punishmentService;
+  private final TomatoService tomatoService;
 
   public Task createTask(Task task, Long userId) {
     task.setUserId(userId);
@@ -58,6 +61,37 @@ public class TaskService {
     }
 
     taskRepository.delete(task);
+  }
+  public Task completeTask(Long taskId, Long userId) {
+    Task task = taskRepository.findById(taskId)
+        .orElseThrow(() -> new RuntimeException("Task not found"));
+
+    if (!Objects.equals(task.getUserId(), userId)) {
+      throw new RuntimeException("Unauthorized");
+    }
+
+    if (task.isCompleted()) {
+      return task; // already completed, nothing to do
+    }
+
+    task.setCompleted(true);
+    task.setCompletedAt(LocalDateTime.now());
+    taskRepository.save(task);
+
+    if (task.isExpired()) {
+      // Expired task → grant tomato
+      tomatoService.addTomato(userId, taskId);
+    } else {
+      // Fresh task -> try resolve punishment
+      var resolved = punishmentService.resolveOldestPunishment(userId, taskId);
+
+      if (resolved == null) {
+        // No punishments -> tomato for productivity
+        tomatoService.addTomato(userId, taskId);
+      }
+    }
+
+    return task;
   }
 }
 

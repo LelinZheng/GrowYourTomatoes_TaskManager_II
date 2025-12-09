@@ -35,6 +35,8 @@ public class Task {
   // Due time for time bomber
   private LocalDateTime dueTime;
 
+  private LocalDateTime completedAt;
+
   // Has the task missed its dueTime?
   @Column(nullable = false)
   private boolean expired;
