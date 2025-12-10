@@ -12,7 +12,9 @@ export default function Login() {
   const handleLogin = async () => {
     try {
       const res = await api.post("/auth/login", { email, password });
+      console.log("Login response token:", res.data.token);
       login(res.data.token);
+      console.log("After calling login(), token in localStorage:", localStorage.getItem("token"));
       navigate("/dashboard");
     } catch {
       alert("Invalid email or password");
