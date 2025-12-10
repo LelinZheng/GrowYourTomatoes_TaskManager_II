@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 import type { Task } from "../types/Task";
+import type { Punishment } from "../types/Punishment";
+import Garden from "../components/Garden";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -9,21 +11,53 @@ export default function Dashboard() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("MEDIUM");
   const [dueTime, setDueTime] = useState("");
-  const [timeBombEnabled, setTimeBombEnabled] = useState(false);
+  const [punishmentsList, setPunishmentsList] = useState<Punishment[]>([]);
   const [error, setError] = useState("");
 
+  type GardenEvent =
+    | "TOMATO_GAINED"
+    | "PUNISHMENT_ADDED"
+    | "PUNISHMENT_RESOLVED"
+    | null;
+  
+  const [lastGardenEvent, setLastGardenEvent] = useState<GardenEvent>(null);
+
+  const prevTomatoesRef = useRef(0);
+  const prevPunishmentsRef = useRef(0);
+
   const [tomatoes, setTomatoes] = useState(0);
-  const [punishments, setPunishments] = useState(0);
 
   // EDIT MODE
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const fetchAll = () => {
     api.get("/tasks").then((res) => setTasks(res.data));
-    api.get("/tomatoes/count").then((res) => setTomatoes(res.data));
-    api
-      .get("/punishments/active")
-      .then((res) => setPunishments(res.data.length));
+  
+    api.get("/tomatoes/count").then((res) => {
+      const newCount = res.data;
+      setTomatoes(newCount);
+  
+      // detect tomato change
+      const prev = prevTomatoesRef.current;
+      if (newCount > prev) {
+        setLastGardenEvent("TOMATO_GAINED");
+      }
+      prevTomatoesRef.current = newCount;
+    });
+  
+    api.get("/punishments/active").then((res) => {
+      const list: Punishment[] = res.data;
+      setPunishmentsList(list);
+      const newCount = list.length;
+  
+      const prev = prevPunishmentsRef.current;
+      if (newCount > prev) {
+        setLastGardenEvent("PUNISHMENT_ADDED");
+      } else if (newCount < prev) {
+        setLastGardenEvent("PUNISHMENT_RESOLVED");
+      }
+      prevPunishmentsRef.current = newCount;
+    });
   };
 
   useEffect(() => {
@@ -77,8 +111,13 @@ export default function Dashboard() {
 
   const handleEditSave = async () => {
     if (!editingTask) return;
-
-    await api.put(`/tasks/${editingTask.id}`, editingTask);
+  
+    const payload = {
+      ...editingTask,
+      timeBombEnabled: editingTask.dueTime ? true : false,
+    };
+  
+    await api.put(`/tasks/${editingTask.id}`, payload);
     setEditingTask(null);
     fetchAll();
   };
@@ -102,9 +141,15 @@ export default function Dashboard() {
 
           <div className="card p-3">
             <h4>⚠️ Punishments</h4>
-            <p className="fs-2">{punishments}</p>
+            <p className="fs-2">{punishmentsList.length}</p>
           </div>
         </div>
+
+        <Garden
+            tomatoes={tomatoes}
+            punishments={punishmentsList}
+            lastEvent={lastGardenEvent}
+        />
 
         <div className="card p-4 mb-4">
             <h4>Create Task</h4>
@@ -310,9 +355,11 @@ export default function Dashboard() {
                     ? editingTask.dueTime.substring(0, 16)
                     : ""
                 }
-                onChange={(e) =>
-                    setEditingTask({ ...editingTask!, dueTime: e.target.value })
-                }
+                onChange={(e) => {
+                    const local = e.target.value; // "2025-12-09T18:00"
+                    const iso = new Date(local).toISOString();
+                    setEditingTask({ ...editingTask!, dueTime: iso });
+                }}
                 />
             </div>
 
