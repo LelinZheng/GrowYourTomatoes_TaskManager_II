@@ -1,108 +1,81 @@
-import { useEffect, useState } from "react";
-import type { Punishment } from "../types/Punishment";
-import "./Garden.css";
+import React from "react";
+import "./garden.css";
 
-type GardenEvent =
-  | "TOMATO_GAINED"
-  | "PUNISHMENT_ADDED"
-  | "PUNISHMENT_RESOLVED"
-  | null;
+export default function Garden({ tomatoes, punishments }) {
+  const hasFog = punishments?.some((p) => p.type === "FOG");
 
-interface GardenProps {
-  tomatoes: number;
-  punishments: Punishment[];
-  lastEvent: GardenEvent;
-}
+  // Calculate number of plants (5 tomatoes per plant)
+  const plantCount = Math.ceil(tomatoes / 5);
 
-function getPunishmentEmoji(type: string): string {
-  const normalized = type.toUpperCase();
-
-  if (normalized.includes("FOG")) return "🌫️";
-  if (normalized.includes("WEED")) return "🌿";
-  if (normalized.includes("BUG") || normalized.includes("INSECT")) return "🐛";
-  if (normalized.includes("ROCK") || normalized.includes("STONE")) return "🪨";
-  if (normalized.includes("CROW") || normalized.includes("BIRD")) return "🐦";
-
-  return "⚠️"; // fallback
-}
-
-export default function Garden({
-  tomatoes,
-  punishments,
-  lastEvent,
-}: GardenProps) {
-  const [burstKey, setBurstKey] = useState(0);
-  const [shakeKey, setShakeKey] = useState(0);
-
-  // Trigger tomato burst animation
-  useEffect(() => {
-    if (lastEvent === "TOMATO_GAINED") {
-      setBurstKey((k) => k + 1);
-    } else if (lastEvent === "PUNISHMENT_ADDED") {
-      setShakeKey((k) => k + 1);
-    }
-  }, [lastEvent]);
-
-  const visibleTomatoes = Math.min(tomatoes, 6); // cap for display
+  // Map punishment type to emoji
+  const emojiMap = {
+    WEED: "🌾",
+    BUG: "🐛",
+    FUNGUS: "🍄",
+    FOG: "🌫️",
+    WILTED_LEAVES: "🍂",
+  };
 
   return (
-    <div className="garden-card card mt-4 mb-5">
-      <div className="card-body">
-        <h4 className="card-title mb-3">🌱 Tomato Garden</h4>
+    <div className="garden-container">
+      {/* Fog overlay stays ABOVE everything */}
+      {hasFog && <div className="fog-overlay"></div>}
 
-        <div className="garden-root">
-          {/* Ground */}
-          <div className="garden-ground" />
-
-          {/* Plant */}
-          <div className="garden-plant">
-            <div className="garden-stem" />
-            <div className="garden-leaf leaf-left" />
-            <div className="garden-leaf leaf-right" />
-
-            {/* Hanging tomatoes */}
-            <div className="garden-tomato-row">
-              {Array.from({ length: visibleTomatoes }).map((_, idx) => (
-                <div key={idx} className="garden-tomato">
-                  🍅
-                </div>
-              ))}
-            </div>
-
-            {/* Burst animation layer */}
-            <div key={burstKey} className="garden-tomato-burst">
-              🍅
-            </div>
-          </div>
-
-          {/* Punishments field */}
-          <div
-            key={shakeKey}
-            className={`garden-punishments ${
-              lastEvent === "PUNISHMENT_ADDED" ? "garden-punishments-shake" : ""
-            }`}
-          >
-            {punishments.length === 0 && (
-              <span className="garden-empty-text">No weeds in your garden 🎉</span>
-            )}
-
-            {punishments.map((p) => (
-              <div key={p.id} className="garden-punishment-chip">
-                <span className="garden-punishment-emoji">
-                  {getPunishmentEmoji(p.type)}
-                </span>
-                <span className="garden-punishment-label">
-                  {p.type.toLowerCase()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <small className="text-muted">
-          Completing tasks grows tomatoes 🍅. Overdue tasks spawn punishments 🌫️🌿.
-        </small>
+      {/* Plants row */}
+      <div className="plants-row">
+        {Array.from({ length: plantCount }).map((_, index) => (
+          <Plant
+            key={index}
+            tomatoes={Math.min(5, tomatoes - index * 5)}
+          />
+        ))}
       </div>
+
+      {/* === RANDOMIZED PUNISHMENTS IN SOIL === */}
+      <div className="punishment-layer">
+        {punishments
+          ?.filter((p) => p.type !== "FOG") // fog is handled separately
+          .map((p) => {
+            // random X between 5% and 95%
+            const randomX = Math.random() * 90 + 5;
+            // random Y between 0 and 40px from soil bottom
+            const randomY = Math.random() * 40;
+
+            return (
+              <div
+                key={p.id}
+                className="punishment-emoji"
+                style={{
+                  left: `${randomX}%`,
+                  bottom: `${randomY}px`,
+                }}
+              >
+                {emojiMap[p.type]}
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+
+function Plant({ tomatoes }) {
+  return (
+    <div className="plant-wrapper">
+      {/* Leaves */}
+      <div className="leaf leaf-a"></div>
+      <div className="leaf leaf-b"></div>
+      <div className="leaf leaf-c"></div>
+
+      {/* Stem */}
+      <div className="stem"></div>
+
+      {/* Tomatoes as emoji */}
+      {Array.from({ length: tomatoes }).map((_, i) => (
+        <div key={i} className={`tomato-emoji tomato-${i}`}>
+          🍅
+        </div>
+      ))}
     </div>
   );
 }

@@ -150,6 +150,37 @@ export default function Dashboard() {
             punishments={punishmentsList}
             lastEvent={lastGardenEvent}
         />
+        <p></p>
+
+        {/* ======== ACTIVE PUNISHMENTS (COMPACT) ======== */}
+        <div className="card p-3 mt-4 w-100">
+            <h5 className="mb-2">Active Punishments:</h5>
+            <div
+                className="d-flex flex-wrap align-items-center"
+                style={{ gap: "12px", fontSize: "32px" }}
+            >
+                {punishmentsList.length === 0 ? (
+                <span style={{ fontSize: "20px", opacity: 0.7 }}>None 🎉</span>
+                ) : (
+                punishmentsList.map((p) => (
+                    <span key={p.id}>
+                    {p.type === "WEED"
+                        ? "🌾"
+                        : p.type === "BUG"
+                        ? "🐛"
+                        : p.type === "FUNGUS"
+                        ? "🍄"
+                        : p.type === "WILTED_LEAVES"
+                        ? "🍂"
+                        : p.type === "FOG"
+                        ? "🌫️"
+                        : ""}
+                    </span>
+                ))
+                )}
+            </div>
+        </div>
+
 
         <div className="card p-4 mb-4">
             <h4>Create Task</h4>
