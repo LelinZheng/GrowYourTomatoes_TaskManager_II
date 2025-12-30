@@ -7,8 +7,8 @@
     background: linear-gradient(
       to bottom,
       #f3fff3,
-      #e5f7e2 65%,
-      #9b7c6d 65%
+      #e5f7e2 75%,
+      #9b7c6d 75%
     );
     overflow: hidden;
   }
@@ -98,67 +98,121 @@
   .tomato-3 { top: 75px; left: 45px; }
   .tomato-4 { top: 75px; right: 45px; }
   
-  /* Punishment Icons */
-  .punishment-icons {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    display: flex;
-    gap: 10px;
-    z-index: 15;
-    font-size: 1.8rem;
-  }
-  
-  /* Animations (NOT for fog) */
-  .weed { animation: shake 1.2s infinite; }
-  @keyframes shake {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(3px); }
-    100% { transform: translateX(0); }
-  }
-  
-  .bug { animation: crawl 3s infinite linear; }
-  @keyframes crawl {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(20px); }
-    100% { transform: translateX(0); }
-  }
-  
-  .fungus { animation: pulse 1.6s infinite; }
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
-  
-  .wilt { animation: wilt-wobble 1.6s infinite; }
-  @keyframes wilt-wobble {
-    0% { transform: rotate(0); }
-    50% { transform: rotate(-12deg); }
-    100% { transform: rotate(0); }
-  }
-  
-/* Punishment emoji inside soil */
+/* Punishment layer stays in soil */
 .punishment-layer {
+  position: absolute;
+  width: 100%;
+  height: 25%; 
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 6;
+
+  /* allow top to stick out above soil edge */
+  overflow: visible;
+}
+
+/* Weed strip using PNG tiles */
+.weed-strip-img {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 90px;              /* tweak to fit your PNG */
+  pointer-events: none;
+  z-index: 7;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 0px;                  /* keep it dense */
+  overflow: hidden;
+
+  /* subtle wind movement (optional) */
+  animation: weed-drift 3.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.weed-strip-tile {
+  position: absolute;
+  left: 0;
+  width: 100%;
+
+  /* control size here */
+  height: 55px;                 /* smaller than before */
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  background-size: auto 55px;   /* matches height => smaller grass */
+
+  pointer-events: none;
+  z-index: 7;
+
+  /* optional gentle movement */
+  animation: weed-drift 3.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+
+@keyframes weed-drift {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(8px); }
+  100% { transform: translateX(0); }
+}
+
+.weed-img {
+  height: 80px;              /* tweak this */
+  width: auto;
+  user-select: none;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.12));
+}
+
+  .leaves-strip-emoji {
     position: absolute;
-    width: 100%;
-    height: 200px; /* matches soil area */
-    bottom: 0;
     left: 0;
+    width: 100%;
+    height: 55px;
     pointer-events: none;
-  }
-  
-  .punishment-emoji {
-    position: absolute;
-    font-size: 48px;       /* big + annoying */
-    animation: wiggle 1.2s ease-in-out infinite;
     z-index: 6;
-    user-select: none;
+  
+    display: flex;
+    align-items: flex-end;
+  
+    /* key: make them tighter */
+    gap: 2px;
+  
+    /* if too many emojis overflow, hide the extra */
+    overflow: hidden;
+  
+    /* gentle movement */
+    animation: leaves-rustle 2.8s ease-in-out infinite;
+    transform-origin: bottom center;
+  
+    /* optional: slightly messy look */
+    opacity: 0.95;
   }
   
-  /* irritate the user */
-  @keyframes wiggle {
-    0% { transform: rotate(-5deg) scale(1); }
-    50% { transform: rotate(5deg) scale(1.15); }
-    100% { transform: rotate(-5deg) scale(1); }
+  .leaf-emoji {
+    font-size: 26px;
+    line-height: 1;
+    transform-origin: bottom center;
+    display: inline-block;
   }
+  
+  @keyframes leaves-rustle {
+    0%   { transform: translateX(0); }
+    50%  { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+  }
+
+/* Keep your scattered emoji styles */
+.punishment-emoji {
+  position: absolute;
+  font-size: 48px;
+  animation: wiggle 1.2s ease-in-out infinite;
+  z-index: 8;
+  user-select: none;
+}
+
+@keyframes wiggle {
+  0% { transform: rotate(-5deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.15); }
+  100% { transform: rotate(-5deg) scale(1); }
+}

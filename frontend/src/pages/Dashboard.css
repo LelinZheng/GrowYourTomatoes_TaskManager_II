@@ -1,0 +1,45 @@
+.punishment-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .weed-icon {
+    height: 1.6em;     /* scales with text like emoji */
+    width: auto;
+    max-height: 32px;  /* safety clamp */
+    max-width: 64px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .punishment-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .punishment-tooltip-text {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 120ms ease, visibility 120ms ease;
+    z-index: 9999;
+  }
+  
+  .punishment-tooltip:hover .punishment-tooltip-text {
+    opacity: 0.85;
+    visibility: visible;
+  }

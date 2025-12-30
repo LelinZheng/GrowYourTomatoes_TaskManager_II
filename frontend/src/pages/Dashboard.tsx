@@ -4,6 +4,8 @@ import api from "../services/api";
 import type { Task } from "../types/Task";
 import type { Punishment } from "../types/Punishment";
 import Garden from "../components/Garden";
+import grassImg from "../assets/grass.png";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -164,6 +166,14 @@ export default function Dashboard() {
     );
   };
 
+  const punishmentLabels: Record<string, string> = {
+    WILTED_LEAVES: "Wilted Leaves",
+    WEED: "Weeds",
+    FUNGUS: "Fungus",
+    BUG: "Bugs",
+    FOG: "Fog",
+  };
+
   return (
     <>
       <Navbar />
@@ -193,31 +203,33 @@ export default function Dashboard() {
 
         {/* ======== ACTIVE PUNISHMENTS (COMPACT) ======== */}
         <div className="card p-3 mt-4 w-100">
-            <h5 className="mb-2">Active Punishments:</h5>
-            <div
-                className="d-flex flex-wrap align-items-center"
-                style={{ gap: "12px", fontSize: "32px" }}
-            >
-                {punishmentsList.length === 0 ? (
-                <span style={{ fontSize: "20px", opacity: 0.7 }}>None 🎉</span>
-                ) : (
-                punishmentsList.map((p) => (
-                    <span key={p.id}>
-                    {p.type === "WEED"
-                        ? "🌾"
-                        : p.type === "BUG"
-                        ? "🐛"
-                        : p.type === "FUNGUS"
-                        ? "🍄"
-                        : p.type === "WILTED_LEAVES"
-                        ? "🍂"
-                        : p.type === "FOG"
-                        ? "🌫️"
-                        : ""}
-                    </span>
-                ))
-                )}
-            </div>
+          <h5 className="mb-2">Active Punishments:</h5>
+          <div
+              className="d-flex flex-wrap align-items-center"
+              style={{ gap: "12px", fontSize: "32px" }}
+          >
+              {punishmentsList.map((p) => (
+                <span key={p.id} className="punishment-tooltip">
+                  <span className="punishment-icon">
+                    {p.type === "WEED" ? (
+                      <img src={grassImg} alt="weed" className="weed-icon" />
+                    ) : p.type === "BUG" ? (
+                      "🐛"
+                    ) : p.type === "FUNGUS" ? (
+                      "🍄"
+                    ) : p.type === "WILTED_LEAVES" ? (
+                      "🍂"
+                    ) : p.type === "FOG" ? (
+                      "🌫️"
+                    ) : null}
+                  </span>
+
+                  <span className="punishment-tooltip-text">
+                    {punishmentLabels[p.type] ?? p.type}
+                  </span>
+                </span>
+              ))}
+          </div>
         </div>
 
 
