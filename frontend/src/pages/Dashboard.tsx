@@ -19,6 +19,14 @@ export default function Dashboard() {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [tomatoes, setTomatoes] = useState(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [tab, setTab] = useState<"ACTIVE" | "COMPLETED">("ACTIVE");
+
+  const openCreateModal = () => setShowCreateModal(true);
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setError("");
+  };
 
   type GardenEvent =
     | "TOMATO_GAINED"
@@ -71,17 +79,15 @@ export default function Dashboard() {
     fetchAll();
   }, []);
 
-  const handleCreateTask = async () => {
+  const handleCreateTask = async (): Promise<boolean> => {
     setError("");
   
-    // Validate due time
     if (dueTime) {
       const now = new Date();
       const selected = new Date(dueTime);
-  
       if (selected < now) {
         setError("Due time must be in the future.");
-        return;
+        return false;
       }
     }
   
@@ -91,7 +97,7 @@ export default function Dashboard() {
         description,
         priority,
         dueTime: dueTime || null,
-        timeBombEnabled: dueTime ? true : false,
+        timeBombEnabled: !!dueTime,
       });
   
       setTitle("");
@@ -100,8 +106,10 @@ export default function Dashboard() {
       setDueTime("");
   
       fetchAll();
+      return true;
     } catch (e) {
       setError("Failed to create task. Please try again.");
+      return false;
     }
   };
   
@@ -179,7 +187,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar />
+      <Navbar
+        onCreateTask={openCreateModal}
+        activeTab={tab}
+        onTabChange={setTab}
+      />
 
       <div className="container mt-4">
         <h1 className="mb-4">Dashboard</h1>
@@ -236,162 +248,185 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {tab === "ACTIVE" ? (
+          <>
+            <h3 className="mt-4 mb-2">Active Tasks</h3>
+            {activeTasks.length === 0 && <p>No active tasks.</p>}
 
-        <div className="card p-4 mb-4">
-            <h4>Create Task</h4>
+            <ul className="list-group mb-5">
+              {activeTasks.map((task) => (
+                <li
+                  key={task.id}
+                  className={`list-group-item d-flex justify-content-between align-items-center ${
+                    task.expired ? "list-group-item-danger" : ""
+                  }`}
+                >
+                  <div>
+                    <strong>{task.title}</strong>
 
-            {error && (
-                <div className="alert alert-danger">{error}</div>
-            )}
+                    {task.description && (
+                      <div className="text-muted small">{task.description}</div>
+                    )}
 
-            <label className="form-label mt-2">Title</label>
-            <input
+                    <div className="small">
+                      Priority: <strong>{task.priority}</strong>
+                    </div>
+
+                    {task.dueTime && (
+                      <div className="text-muted small">
+                        Due: {new Date(task.dueTime).toLocaleString()}
+                      </div>
+                    )}
+
+                    {task.expired && (
+                      <div className="text-danger fw-bold small">EXPIRED</div>
+                    )}
+                  </div>
+
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => handleComplete(task.id)}
+                    >
+                      Complete
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={() => setEditingTask(task)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => openDeleteModal(task)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <>
+            <h3 className="mt-4 mb-2">Completed Tasks</h3>
+            {completedTasks.length === 0 && <p>No completed tasks.</p>}
+
+            <ul className="list-group mb-5">
+              {completedTasks.map((task) => (
+                <li
+                  key={task.id}
+                  className="list-group-item d-flex justify-content-between align-items-center"
+                  style={{ opacity: 0.6 }}
+                >
+                  <div>
+                    <strong className="text-decoration-line-through">{task.title}</strong>
+
+                    {task.description && (
+                      <div className="text-muted small">{task.description}</div>
+                    )}
+
+                    <div className="text-success fw-bold small">Completed</div>
+                  </div>
+
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => openDeleteModal(task)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <div style={{ height: "80px" }}></div>
+      </div>
+
+      {/* CREATE TASK MODAL */}
+      <div
+        className="modal fade show"
+        tabIndex={-1}
+        role="dialog"
+        style={{
+          display: showCreateModal ? "block" : "none",
+          background: "rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Create Task</h5>
+              <button className="btn-close" onClick={closeCreateModal} />
+            </div>
+
+            <div className="modal-body">
+              {error && <div className="alert alert-danger">{error}</div>}
+
+              <label className="form-label">Title</label>
+              <input
                 className="form-control"
                 placeholder="Task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-            />
+              />
 
-            <label className="form-label mt-3">Description (optional)</label>
-            <textarea
+              <label className="form-label mt-3">Description (optional)</label>
+              <textarea
                 className="form-control"
                 value={description}
                 placeholder="Write a description..."
                 onChange={(e) => setDescription(e.target.value)}
-            />
+              />
 
-            <label className="form-label mt-3">Priority</label>
-            <select
+              <label className="form-label mt-3">Priority</label>
+              <select
                 className="form-control"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-            >
+              >
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>
-            </select>
+              </select>
 
-            <label className="form-label mt-3">Due Time (optional)</label>
-            <input
+              <label className="form-label mt-3">Due Time (optional)</label>
+              <input
                 type="datetime-local"
                 className="form-control"
                 value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
-            />
+              />
+            </div>
 
-            <button className="btn btn-success w-100 mt-4" onClick={handleCreateTask}>
-                Add Task
-            </button>
-        </div>
-
-
-        {/* ======== ACTIVE TASKS ======== */}
-        <h3 className="mt-4 mb-2">Active Tasks</h3>
-
-        {activeTasks.length === 0 && <p>No active tasks.</p>}
-
-        <ul className="list-group mb-5">
-          {activeTasks.map((task) => (
-            <li
-              key={task.id}
-              className={`list-group-item d-flex justify-content-between align-items-center ${
-                task.expired ? "list-group-item-danger" : ""
-              }`}
-            >
-              <div>
-                <strong>{task.title}</strong>
-
-                {task.description && (
-                  <div className="text-muted small">{task.description}</div>
-                )}
-
-                <div className="small">
-                  Priority: <strong>{task.priority}</strong>
-                </div>
-
-                {task.dueTime && (
-                  <div className="text-muted small">
-                    Due: {new Date(task.dueTime).toLocaleString()}
-                  </div>
-                )}
-
-                {task.expired && (
-                  <div className="text-danger fw-bold small">EXPIRED</div>
-                )}
-              </div>
-
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => handleComplete(task.id)}
-                >
-                  Complete
-                </button>
-
-                <button
-                  className="btn btn-sm btn-warning"
-                  onClick={() => setEditingTask(task)}
-                >
-                  Edit
-                </button>
-
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => openDeleteModal(task)}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {/* ======== COMPLETED TASKS ======== */}
-        <h3 className="mt-4 mb-2">Completed Tasks</h3>
-
-        {completedTasks.length === 0 && <p>No completed tasks.</p>}
-
-        <ul className="list-group mb-5">
-          {completedTasks.map((task) => (
-            <li
-              key={task.id}
-              className="list-group-item d-flex justify-content-between align-items-center"
-              style={{ opacity: 0.6 }}
-            >
-              <div>
-                <strong className="text-decoration-line-through">
-                  {task.title}
-                </strong>
-
-                {task.description && (
-                  <div className="text-muted small">{task.description}</div>
-                )}
-
-                <div className="text-success fw-bold small">Completed</div>
-              </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={closeCreateModal}>
+                Cancel
+              </button>
 
               <button
-                className="btn btn-sm btn-danger"
-                onClick={() => openDeleteModal(task)}
+                className="btn btn-success"
+                onClick={async () => {
+                  const ok = await handleCreateTask();
+                  if (ok) closeCreateModal();
+                }}
               >
-                Delete
+                Add Task
               </button>
-            </li>
-          ))}
-        </ul>
-
-        
-
-        <div style={{ height: "80px" }}></div>
+            </div>
+          </div>
+        </div>
       </div>
     
-        {/* EDIT MODAL */}
-        <div
-            className="modal fade show"
-            tabIndex={-1}
-            role="dialog"
-            style={{ display: editingTask ? "block" : "none", background: "rgba(0,0,0,0.5)" }}
-        >
+      {/* EDIT MODAL */}
+      <div
+          className="modal fade show"
+          tabIndex={-1}
+          role="dialog"
+          style={{ display: editingTask ? "block" : "none", background: "rgba(0,0,0,0.5)" }}
+      >
         <div className="modal-dialog">
             <div className="modal-content">
 
@@ -459,7 +494,7 @@ export default function Dashboard() {
             </div>
 
         </div>
-    </div>
+      </div>
     </div>
 
     {/* DELETE CONFIRM MODAL */}
