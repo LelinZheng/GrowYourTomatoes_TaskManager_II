@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,7 @@ public class TaskService {
     return taskRepository.save(task);
   }
 
+  @Transactional
   public void deleteTask(Long id, Long userId) {
     Task task = taskRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -60,8 +62,14 @@ public class TaskService {
       throw new RuntimeException("Unauthorized");
     }
 
+    if (task.isCompleted() && task.getTomatoesEarned() > 0) {
+      tomatoService.removeTomatoForTask(userId, task.getId());
+    }
+
     taskRepository.delete(task);
   }
+
+  @Transactional
   public Task completeTask(Long taskId, Long userId) {
     Task task = taskRepository.findById(taskId)
         .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -70,27 +78,29 @@ public class TaskService {
       throw new RuntimeException("Unauthorized");
     }
 
-    if (task.isCompleted()) {
-      return task; // already completed, nothing to do
-    }
+    if (task.isCompleted()) return task;
 
     task.setCompleted(true);
     task.setCompletedAt(LocalDateTime.now());
-    taskRepository.save(task);
 
     if (task.isExpired()) {
-      // Expired task → grant tomato
+      task.setTomatoesEarned(1);
+      taskRepository.save(task);
       tomatoService.addTomato(userId, taskId);
-    } else {
-      // Fresh task -> try resolve punishment
-      var resolved = punishmentService.resolveOldestPunishment(userId, taskId);
-
-      if (resolved == null) {
-        // No punishments -> tomato for productivity
-        tomatoService.addTomato(userId, taskId);
-      }
+      return task;
     }
 
+    var resolved = punishmentService.resolveOldestPunishment(userId, taskId);
+
+    if (resolved != null) {
+      task.setTomatoesEarned(0);
+      taskRepository.save(task);
+      return task;
+    }
+
+    task.setTomatoesEarned(1);
+    taskRepository.save(task);
+    tomatoService.addTomato(userId, taskId);
     return task;
   }
 }

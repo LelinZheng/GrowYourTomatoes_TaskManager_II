@@ -13,6 +13,9 @@ export default function Dashboard() {
   const [dueTime, setDueTime] = useState("");
   const [punishmentsList, setPunishmentsList] = useState<Punishment[]>([]);
   const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   type GardenEvent =
     | "TOMATO_GAINED"
@@ -124,6 +127,42 @@ export default function Dashboard() {
 
   const activeTasks = tasks.filter((t) => !t.completed);
   const completedTasks = tasks.filter((t) => t.completed);
+
+  const openDeleteModal = (task: Task) => {
+    setTaskToDelete(task);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleteLoading) return;
+    setShowDeleteModal(false);
+    setTaskToDelete(null);
+  };
+
+  const getDeleteMessage = (task: Task | null) => {
+    if (!task) return "";
+    if (!task.completed) return "Are you sure you want to delete this task?";
+  
+    if ((task.tomatoesEarned ?? 0) > 0) {
+      return (
+        <>
+          <p>This completed task earned you 1 tomato.</p>
+          <p className="mb-0">
+            Deleting it will remove 1 tomato from your total. Continue?
+          </p>
+        </>
+      );
+    }
+  
+    return (
+      <>
+        <p>This completed task did not earn a tomato (it resolved a punishment).</p>
+        <p className="mb-0">
+          Deleting it won’t change your tomatoes. Continue?
+        </p>
+      </>
+    );
+  };
 
   return (
     <>
@@ -282,7 +321,7 @@ export default function Dashboard() {
 
                 <button
                   className="btn btn-sm btn-danger"
-                  onClick={() => handleDelete(task.id)}
+                  onClick={() => openDeleteModal(task)}
                 >
                   Delete
                 </button>
@@ -317,7 +356,7 @@ export default function Dashboard() {
 
               <button
                 className="btn btn-sm btn-danger"
-                onClick={() => handleDelete(task.id)}
+                onClick={() => openDeleteModal(task)}
               >
                 Delete
               </button>
@@ -405,6 +444,68 @@ export default function Dashboard() {
 
         </div>
     </div>
+    </div>
+
+    {/* DELETE CONFIRM MODAL */}
+    <div
+      className="modal fade show"
+      tabIndex={-1}
+      role="dialog"
+      style={{
+        display: showDeleteModal ? "block" : "none",
+        background: "rgba(0,0,0,0.5)",
+      }}
+    >
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content" style={{ borderRadius: "14px" }}>
+          <div className="modal-header">
+            <h5 className="modal-title">Delete task?</h5>
+            <button className="btn-close" onClick={closeDeleteModal} />
+          </div>
+
+          <div className="modal-body">
+            <p className="mb-2">{getDeleteMessage(taskToDelete)}</p>
+
+            <div className="p-2 bg-light rounded">
+              <div className="fw-semibold">{taskToDelete?.title}</div>
+              {taskToDelete?.description && (
+                <div className="text-muted small">{taskToDelete.description}</div>
+              )}
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button
+              className="btn btn-outline-secondary"
+              onClick={closeDeleteModal}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="btn btn-danger"
+              disabled={deleteLoading}
+              onClick={async () => {
+                if (!taskToDelete) return;
+                setDeleteLoading(true);
+                try {
+                  await api.delete(`/tasks/${taskToDelete.id}`);
+                  closeDeleteModal();
+                  fetchAll(); // updates tasks + tomatoes + punishments
+                } catch (e) {
+                  console.error(e);
+                  alert("Failed to delete task");
+                } finally {
+                  setDeleteLoading(false);
+                }
+              }}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     </>

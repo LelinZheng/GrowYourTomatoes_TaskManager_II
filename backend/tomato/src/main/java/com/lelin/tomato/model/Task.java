@@ -50,4 +50,7 @@ public class Task {
 
   @Column(nullable = false)
   private Long userId;
+
+  @Column(nullable = false)
+  private int tomatoesEarned = 0;
 }

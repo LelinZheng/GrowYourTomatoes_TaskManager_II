@@ -6,5 +6,6 @@ export interface Task {
     expired: boolean;
     timeBombEnabled: boolean;
     completed: boolean;
+    tomatoesEarned: number; 
   }
   

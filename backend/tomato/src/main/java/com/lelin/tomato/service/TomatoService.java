@@ -4,9 +4,11 @@ import com.lelin.tomato.model.Tomato;
 import com.lelin.tomato.repository.TomatoRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,5 +31,10 @@ public class TomatoService {
 
   public List<Tomato> getTomatoHistory(Long userId) {
     return tomatoRepo.findByUserIdOrderByTimestampDesc(userId);
+  }
+
+  @Transactional
+  public void removeTomatoForTask(Long userId, Long taskId) {
+    tomatoRepo.deleteByUserIdAndTaskId(userId, taskId);
   }
 }
