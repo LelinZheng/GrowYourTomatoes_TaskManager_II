@@ -13,23 +13,82 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
   const gardenRef = useRef(null);
   const [soilPx, setSoilPx] = useState(0);
   const [showTomatoToast, setShowTomatoToast] = useState(false);
+  const [plantScale, setPlantScale] = useState(1);
+  const plantsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [maxScroll, setMaxScroll] = useState(0);
 
   useLayoutEffect(() => {
     if (!gardenRef.current) return;
-
+  
     const el = gardenRef.current;
-
+  
     const update = () => {
-      const h = el.getBoundingClientRect().height;
-      setSoilPx(Math.floor(h * 0.25)); //
+      const rect = el.getBoundingClientRect();
+      const h = rect.height;
+      const w = rect.width;
+  
+      setSoilPx(Math.floor(h * 0.25));
+  
+      // --- responsive plant sizing ---
+      // base sizes (match your current plant wrapper)
+      const BASE_W = 180;
+      const MIN_SCALE = 0.55;         // don't get too tiny
+      const SIDE_PADDING = 40;        // breathing room
+      const GAP = 24;                 // target spacing between plants
+  
+      const available = Math.max(0, w - SIDE_PADDING);
+      const neededPerPlant = BASE_W + GAP;
+      const VISIBLE_PLANTS = Math.min(6, plantCount);
+      const raw = available / (VISIBLE_PLANTS * neededPerPlant);
+  
+      const s = Math.max(MIN_SCALE, Math.min(1, raw));
+      setPlantScale(s);
     };
-
+  
     update();
-
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [plantCount]);
+
+  useEffect(() => {
+    const el = plantsScrollRef.current;
+    if (!el) return;
+  
+    const update = () => {
+      const ms = Math.max(0, el.scrollWidth - el.clientWidth);
+      setMaxScroll(ms);
+      setScrollLeft(el.scrollLeft);
+    };
+  
+    update();
+  
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+  
+    el.addEventListener("scroll", update, { passive: true });
+  
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", update);
+    };
+  }, [plantCount, plantScale]);
+
+  useEffect(() => {
+    const el = plantsScrollRef.current;
+    if (!el) return;
+  
+    // after DOM lays out
+    requestAnimationFrame(() => {
+      const ms = Math.max(0, el.scrollWidth - el.clientWidth);
+      // default view = newest plants (right side)
+      el.scrollLeft = ms;
+      setMaxScroll(ms);
+      setScrollLeft(ms);
+    });
+  }, [plantCount]);
+  
 
   const stripOffsets = useMemo(() => {
     const soil = soilPx || 0;
@@ -109,11 +168,23 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
           }}
         />
       ))}
-
-      <div className="plants-row">
-        {Array.from({ length: plantCount }).map((_, index) => (
-          <Plant key={index} tomatoes={Math.min(5, tomatoes - index * 5)} />
-        ))}
+      <div className="plants-scroll" ref={plantsScrollRef}>
+        <div className="plants-row">
+          {Array.from({ length: plantCount }).map((_, index) => (
+            <div
+              key={index}
+              className="plant-slot"
+              style={{ ["--plant-scale" as any]: plantScale }}
+            >
+              <div className="plant-inner">
+              <Plant
+              tomatoes={Math.min(5, tomatoes - index * 5)}
+              scale={plantScale}
+            />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="punishment-layer">
@@ -181,7 +252,7 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
   );
 }
 
-function Plant({ tomatoes }) {
+function Plant({ tomatoes }: { tomatoes: number }) {
   return (
     <div className="plant-wrapper">
       <div className="leaf leaf-a"></div>
