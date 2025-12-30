@@ -168,6 +168,18 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
           }}
         />
       ))}
+      {fogCount >= 5 && (
+        <div className="fog-warning">
+          <div className="fog-warning-card">
+            <div className="fog-warning-title">🌫️ Too Foggy to See</div>
+            <div className="fog-warning-text">
+              The garden is completely covered in fog.
+              <br />
+              Complete more tasks to clear punishments and reveal your trees 🌱
+            </div>
+          </div>
+        </div>
+      )}
       <div className="plants-scroll" ref={plantsScrollRef}>
         <div className="plants-row">
           {Array.from({ length: plantCount }).map((_, index) => (

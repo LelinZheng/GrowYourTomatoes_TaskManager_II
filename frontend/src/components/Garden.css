@@ -21,6 +21,39 @@
     background: rgba(255, 255, 255);
     z-index: 20;
   }
+
+  /* Fog warning overlay */
+  .fog-warning {
+    position: absolute;
+    inset: 0;
+    z-index: 30;                 /* above fog (20), below toast (999) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;        /* garden feels disabled */
+  }
+
+  .fog-warning-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    border-radius: 14px;
+    padding: 20px 26px;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  .fog-warning-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .fog-warning-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #444;
+  }
   
   
   /* ROW: purely horizontal layout */
