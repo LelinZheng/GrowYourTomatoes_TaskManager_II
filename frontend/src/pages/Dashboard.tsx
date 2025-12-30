@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [tomatoes, setTomatoes] = useState(0);
 
   type GardenEvent =
     | "TOMATO_GAINED"
@@ -30,7 +31,7 @@ export default function Dashboard() {
   const prevTomatoesRef = useRef(0);
   const prevPunishmentsRef = useRef(0);
 
-  const [tomatoes, setTomatoes] = useState(0);
+  const [tomatoToastId, setTomatoToastId] = useState(0);
 
   // EDIT MODE
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -40,13 +41,14 @@ export default function Dashboard() {
   
     api.get("/tomatoes/count").then((res) => {
       const newCount = res.data;
-      setTomatoes(newCount);
-  
-      // detect tomato change
       const prev = prevTomatoesRef.current;
+    
+      setTomatoes(newCount);
+    
       if (newCount > prev) {
-        setLastGardenEvent("TOMATO_GAINED");
+        setTomatoToastId((v) => v + 1); // ✅ reliable trigger
       }
+    
       prevTomatoesRef.current = newCount;
     });
   
@@ -105,6 +107,7 @@ export default function Dashboard() {
   
 
   const handleComplete = async (taskId: number) => {
+    setError("");
     await api.put(`/tasks/${taskId}/complete`);
     fetchAll();
   };
@@ -198,6 +201,7 @@ export default function Dashboard() {
             tomatoes={tomatoes}
             punishments={punishmentsList}
             lastEvent={lastGardenEvent}
+            tomatoToastId={tomatoToastId}
         />
         <p></p>
 

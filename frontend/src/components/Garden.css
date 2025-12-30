@@ -18,7 +18,7 @@
     position: absolute;
     inset: 0;
     backdrop-filter: blur(6px);
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.10);
     z-index: 10;
   }
   
@@ -97,6 +97,28 @@
   .tomato-2 { top: 35px; right: 35px; }
   .tomato-3 { top: 75px; left: 45px; }
   .tomato-4 { top: 75px; right: 45px; }
+
+  /* Tomato adding +1 animationn */
+  .garden-toast {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    pointer-events: none;
+  }
+  
+  .tomato-toast {
+    font-size: 22px;
+    font-weight: 700;
+    animation: tomato-toast-float 0.9s ease-out forwards;
+  }
+  
+  @keyframes tomato-toast-float {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
+    20%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(1.05); }
+  }
   
 /* Punishment layer stays in soil */
 .punishment-layer {

@@ -2,16 +2,17 @@ import React, { useMemo, useRef, useEffect, useLayoutEffect, useState } from "re
 import "./garden.css";
 import grassImg from "../assets/grass.png";
 
-export default function Garden({ tomatoes, punishments }) {
-  const hasFog = punishments?.some((p) => p.type === "FOG");
-  const hasWeed = punishments?.some((p) => p.type === "WEED");
-  const hasLeaves = punishments?.some((p) => p.type === "WILTED_LEAVES");
+export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId }) {
+  const fogCount = (punishments ?? []).filter((p) => p.type === "FOG").length;
+  const weedCount = (punishments ?? []).filter((p) => p.type === "WEED").length;
+  const leavesCount = (punishments ?? []).filter((p) => p.type === "WILTED_LEAVES").length;
 
   // 5 tomatoes per plant
   const plantCount = Math.ceil(tomatoes / 5);
 
   const gardenRef = useRef(null);
   const [soilPx, setSoilPx] = useState(0);
+  const [showTomatoToast, setShowTomatoToast] = useState(false);
 
   useLayoutEffect(() => {
     if (!gardenRef.current) return;
@@ -32,15 +33,16 @@ export default function Garden({ tomatoes, punishments }) {
 
   const stripOffsets = useMemo(() => {
     const soil = soilPx || 0;
+    const maxBottom = Math.max(0, soil * 0.8);
   
-    const weedMax = Math.max(0, soil * 0.8);
-    const leavesMax = Math.max(0, soil * 0.8);
+    const make = (n) =>
+      Array.from({ length: n }).map(() => Math.floor(Math.random() * (maxBottom + 1)));
   
-    const weedBottom = Math.floor(Math.random() * (weedMax + 1));
-    const leavesBottom = Math.floor(Math.random() * (leavesMax + 1));
-  
-    return { weedBottom, leavesBottom };
-  }, [hasWeed, hasLeaves, soilPx]);
+    return {
+      weed: make(weedCount),
+      leaves: make(leavesCount),
+    };
+  }, [soilPx, weedCount, leavesCount]);
 
   const emojiMap = {
     BUG: "🐛",
@@ -85,10 +87,28 @@ export default function Garden({ tomatoes, punishments }) {
       }
     }
   }, [scatteredPunishments, soilPx]);
+
+  useEffect(() => {
+    if (!tomatoToastId) return; // ignore initial 0
+    setShowTomatoToast(true);
+    const t = setTimeout(() => setShowTomatoToast(false), 900);
+    return () => clearTimeout(t);
+  }, [tomatoToastId]);
   
   return (
     <div className="garden-container" ref={gardenRef}>
-      {hasFog && <div className="fog-overlay"></div>}
+      {showTomatoToast && (
+        <div className="garden-toast tomato-toast">+1 🍅</div>
+      )}
+      {Array.from({ length: fogCount }).map((_, i) => (
+        <div
+          key={`fog-${i}`}
+          className="fog-overlay"
+          style={{
+            opacity: Math.min(0.75, 0.22 + i * 0.12), // stack intensity
+          }}
+        />
+      ))}
 
       <div className="plants-row">
         {Array.from({ length: plantCount }).map((_, index) => (
@@ -98,27 +118,33 @@ export default function Garden({ tomatoes, punishments }) {
 
       <div className="punishment-layer">
         {/* Weed strip (PNG tile, responsive) */}
-        {hasWeed && (
+        {stripOffsets.weed.map((bottom, i) => (
           <div
+            key={`weed-${i}`}
             className="weed-strip-tile"
             aria-hidden="true"
             style={{
-              bottom: `${stripOffsets.weedBottom}px`,
+              bottom: `${bottom}px`,
               backgroundImage: `url(${grassImg})`,
+              opacity: Math.max(0.35, 0.9 - i * 0.15), // optional layering feel
             }}
           />
-        )}
+        ))}
 
         {/* Leaves strip (emoji carpet) */}
-        {hasLeaves && (
+        {stripOffsets.leaves.map((bottom, i) => (
           <div
+            key={`leaves-${i}`}
             className="leaves-strip-emoji"
             aria-hidden="true"
-            style={{ bottom: `${stripOffsets.leavesBottom}px` }}
+            style={{
+              bottom: `${bottom}px`,
+              opacity: Math.max(0.35, 0.95 - i * 0.15), // optional
+            }}
           >
-            {leafStyles.map((s, i) => (
+            {leafStyles.map((s, idx) => (
               <span
-                key={i}
+                key={`${i}-${idx}`}
                 className="leaf-emoji"
                 style={{
                   transform: `translateY(${s.y}px) rotate(${s.rotate}deg) scale(${s.scale})`,
@@ -129,7 +155,7 @@ export default function Garden({ tomatoes, punishments }) {
               </span>
             ))}
           </div>
-        )}
+        ))}
 
         {/* Scattered BUG/FUNGUS (stable positions) */}
         {scatteredPunishments.map((p) => {
