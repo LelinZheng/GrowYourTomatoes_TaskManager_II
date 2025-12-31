@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   const punishmentLabels: Record<string, string> = {
     WILTED_LEAVES: "Wilted Leaves",
-    WEED: "Weeds",
+    WEEDS: "Weeds",
     FUNGUS: "Fungus",
     BUG: "Bugs",
     FOG: "Fog",
@@ -219,32 +219,42 @@ export default function Dashboard() {
 
         {/* ======== ACTIVE PUNISHMENTS (COMPACT) ======== */}
         <div className="card p-3 mt-4 w-100">
-          <h5 className="mb-2">Active Punishments:</h5>
-          <div
-              className="d-flex flex-wrap align-items-center"
-              style={{ gap: "12px", fontSize: "32px" }}
-          >
-              {punishmentsList.map((p) => (
-                <span key={p.id} className="punishment-tooltip">
-                  <span className="punishment-icon">
-                    {p.type === "WEED" ? (
-                      <img src={grassImg} alt="weed" className="weed-icon" />
-                    ) : p.type === "BUG" ? (
-                      "🐛"
-                    ) : p.type === "FUNGUS" ? (
-                      "🍄"
-                    ) : p.type === "WILTED_LEAVES" ? (
-                      "🍂"
-                    ) : p.type === "FOG" ? (
-                      "🌫️"
-                    ) : null}
-                  </span>
+        <div className="active-punishments">
+          {punishmentsList.length === 0 ? (
+            <div className="no-punishment">
+              🎉 No active punishments — hooray!
+            </div>
+            ) : (
+              <div>
+                <h5 className="mb-2">Active Punishments:</h5>
+                <div
+                    className="d-flex flex-wrap align-items-center"
+                    style={{ gap: "12px", fontSize: "32px" }}
+                >
+                    {punishmentsList.map((p) => (
+                      <span key={p.id} className="punishment-tooltip">
+                        <span className="punishment-icon">
+                          {p.type === "WEEDS" ? (
+                            <img src={grassImg} alt="weeds" className="weeds-icon" />
+                          ) : p.type === "BUG" ? (
+                            "🐛"
+                          ) : p.type === "FUNGUS" ? (
+                            "🍄"
+                          ) : p.type === "WILTED_LEAVES" ? (
+                            "🍂"
+                          ) : p.type === "FOG" ? (
+                            "🌫️"
+                          ) : null}
+                        </span>
 
-                  <span className="punishment-tooltip-text">
-                    {punishmentLabels[p.type] ?? p.type}
-                  </span>
-                </span>
-              ))}
+                        <span className="punishment-tooltip-text">
+                          {punishmentLabels[p.type] ?? p.type}
+                        </span>
+                      </span>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

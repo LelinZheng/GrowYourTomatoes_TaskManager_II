@@ -1,7 +1,7 @@
 package com.lelin.tomato.model;
 
 public enum PunishmentType {
-  WEED,
+  WEEDS,
   BUG,
   FUNGUS,
   FOG,

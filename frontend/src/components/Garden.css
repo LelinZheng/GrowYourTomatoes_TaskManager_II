@@ -54,6 +54,10 @@
     line-height: 1.5;
     color: #444;
   }
+
+  .fog-overlay {
+    pointer-events: none;
+  }
   
   
   /* ROW: purely horizontal layout */

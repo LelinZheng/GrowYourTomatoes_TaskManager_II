@@ -4,7 +4,7 @@ import grassImg from "../assets/grass.png";
 
 export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId }) {
   const fogCount = (punishments ?? []).filter((p) => p.type === "FOG").length;
-  const weedCount = (punishments ?? []).filter((p) => p.type === "WEED").length;
+  const weedCount = (punishments ?? []).filter((p) => p.type === "WEEDS").length;
   const leavesCount = (punishments ?? []).filter((p) => p.type === "WILTED_LEAVES").length;
 
   // 5 tomatoes per plant
@@ -200,7 +200,7 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
       </div>
 
       <div className="punishment-layer">
-        {/* Weed strip (PNG tile, responsive) */}
+        {/* Weeds strip (PNG tile, responsive) */}
         {stripOffsets.weed.map((bottom, i) => (
           <div
             key={`weed-${i}`}
