@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [tomatoes, setTomatoes] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [tab, setTab] = useState<"ACTIVE" | "COMPLETED">("ACTIVE");
+  const [resolveToastId, setResolveToastId] = useState(0);
 
   const openCreateModal = () => setShowCreateModal(true);
   const closeCreateModal = () => {
@@ -70,6 +71,7 @@ export default function Dashboard() {
         setLastGardenEvent("PUNISHMENT_ADDED");
       } else if (newCount < prev) {
         setLastGardenEvent("PUNISHMENT_RESOLVED");
+        setResolveToastId((v) => v + 1);
       }
       prevPunishmentsRef.current = newCount;
     });
@@ -209,11 +211,16 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className="garden-legend">
+          🍅 Earn tomato · 🧹 Resolve punishment (on-time) · ⏰ Expired task still earns 🍅
+        </div>
+
         <Garden
             tomatoes={tomatoes}
             punishments={punishmentsList}
             lastEvent={lastGardenEvent}
             tomatoToastId={tomatoToastId}
+            resolveToastId={resolveToastId}
         />
         <p></p>
 

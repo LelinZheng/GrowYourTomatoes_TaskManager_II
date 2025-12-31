@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useLayoutEffect, useState } from "re
 import "./garden.css";
 import grassImg from "../assets/grass.png";
 
-export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId }) {
+export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId, resolveToastId}) {
   const fogCount = (punishments ?? []).filter((p) => p.type === "FOG").length;
   const weedCount = (punishments ?? []).filter((p) => p.type === "WEEDS").length;
   const leavesCount = (punishments ?? []).filter((p) => p.type === "WILTED_LEAVES").length;
@@ -13,6 +13,7 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
   const gardenRef = useRef(null);
   const [soilPx, setSoilPx] = useState(0);
   const [showTomatoToast, setShowTomatoToast] = useState(false);
+  const [showResolveToast, setShowResolveToast] = useState(false);
   const [plantScale, setPlantScale] = useState(1);
   const plantsScrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -153,11 +154,21 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
     const t = setTimeout(() => setShowTomatoToast(false), 900);
     return () => clearTimeout(t);
   }, [tomatoToastId]);
+
+  useEffect(() => {
+    if (!resolveToastId) return; // ignore initial 0
+    setShowResolveToast(true);
+    const t = setTimeout(() => setShowResolveToast(false), 900);
+    return () => clearTimeout(t);
+  }, [resolveToastId]);
   
   return (
     <div className="garden-container" ref={gardenRef}>
       {showTomatoToast && (
         <div className="garden-toast tomato-toast">+1 🍅</div>
+      )}
+      {showResolveToast && (
+        <div className="garden-toast resolve-toast">🧹 Resolved</div>
       )}
       {Array.from({ length: fogCount }).map((_, i) => (
         <div

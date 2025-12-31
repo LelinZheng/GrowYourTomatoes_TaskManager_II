@@ -52,3 +52,9 @@
     opacity: 0.85;
     visibility: visible;
   }
+
+  .garden-legend{
+    margin: 10px 0 12px;
+    font-size: 14px;
+    color: rgba(0,0,0,0.65);
+  }

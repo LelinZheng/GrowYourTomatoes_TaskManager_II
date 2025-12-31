@@ -210,6 +210,12 @@
     font-weight: 700;
     animation: tomato-toast-float 0.9s ease-out forwards;
   }
+
+  .resolve-toast{
+    font-size: 22px;
+    font-weight: 700;
+    animation: tomato-toast-float 0.9s ease-out forwards;
+  }
   
   @keyframes tomato-toast-float {
     0%   { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
