@@ -61,7 +61,7 @@ export default function Landing() {
                     <div className="stat-num">🌫️</div>
                     <div className="stat-text">
                     <strong>Punishments</strong>
-                    <span>Fog, weeds, and wilt you can fix</span>
+                    <span>Fog, weeds, fungus, bugs and wilt — all fixable</span>
                     </div>
                 </div>
                 </div>

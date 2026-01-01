@@ -202,12 +202,12 @@ export default function Dashboard() {
         <div className="d-flex gap-3 mb-4">
           <div className="card p-3">
             <h4>🍅 Tomatoes</h4>
-            <p className="fs-2">{tomatoes}</p>
+            <p className="fs-2 fw-bold text-dark">{tomatoes}</p>
           </div>
 
           <div className="card p-3">
             <h4>⚠️ Punishments</h4>
-            <p className="fs-2">{punishmentsList.length}</p>
+            <p className="fs-2 fw-bold text-dark">{punishmentsList.length}</p>
           </div>
         </div>
 
