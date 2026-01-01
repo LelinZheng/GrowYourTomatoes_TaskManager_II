@@ -1,5 +1,6 @@
 package com.lelin.tomato.security;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,10 +24,11 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
     http
-        .cors().and()
-        .csrf().disable()
+        .cors(cors -> {})
+        .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/**").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/auth/**", "/deep_ping").permitAll()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -48,7 +50,10 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);
-    config.addAllowedOrigin("http://localhost:5173"); // your frontend
+    config.setAllowedOrigins(List.of(
+        "http://localhost:5173",
+        "http://tomato-tasks-frontend-1.s3-website-us-west-2.amazonaws.com"
+    ));
     config.addAllowedHeader("*");
     config.addAllowedMethod("*");
 

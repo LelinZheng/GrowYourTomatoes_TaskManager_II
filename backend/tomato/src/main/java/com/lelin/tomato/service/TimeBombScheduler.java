@@ -16,7 +16,7 @@ public class TimeBombScheduler {
   private final TaskRepository taskRepo;
   private final PunishmentService punishmentService;
 
-  @Scheduled(fixedRate = 5000) // every 5s
+  @Scheduled(fixedRate = 30000) // every 30s
   public void checkExpiredTasks() {
     LocalDateTime now = LocalDateTime.now();
 

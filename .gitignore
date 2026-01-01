@@ -52,3 +52,7 @@ __MACOSX/
 logs/
 *.log
 log/
+
+*.pem
+*.key
+*.ppk
