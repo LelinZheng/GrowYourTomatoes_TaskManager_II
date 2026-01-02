@@ -55,4 +55,4 @@ log/
 
 *.pem
 *.key
-*.ppk
+*.ppk*.pem
