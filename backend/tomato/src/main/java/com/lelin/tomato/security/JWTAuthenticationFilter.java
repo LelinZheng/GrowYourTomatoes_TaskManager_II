@@ -27,6 +27,12 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
       FilterChain filterChain)
       throws ServletException, IOException {
 
+    String path = request.getServletPath();
+    if (path.startsWith("/auth/") || path.equals("/deep_ping")) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     String authHeader = request.getHeader("Authorization");
 
     String jwt = null;
