@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useLayoutEffect, useState } from "react";
-import "./garden.css";
+import "./Garden.css";
 import grassImg from "../assets/grass.png";
 
 export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId, resolveToastId}) {
