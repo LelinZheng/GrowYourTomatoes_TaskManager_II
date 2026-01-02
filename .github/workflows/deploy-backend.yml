@@ -36,60 +36,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      - name: Sync GitHub Actions IPs to EC2 SG (SSH allowlist)
+       - name: Temporarily allow this runner IP for SSH
         shell: bash
         env:
           SG_ID: ${{ secrets.EC2_SG_ID }}
+          AWS_REGION: us-west-2
         run: |
           set -euo pipefail
 
-          echo "Fetching GitHub meta..."
-          META_JSON="$(curl -fsSL https://api.github.com/meta)"
+          RUNNER_IP="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')/32"
+          echo "Runner public IP: $RUNNER_IP"
 
-          NEW_CIDRS="$(echo "$META_JSON" | jq -r '.actions[] | select(contains("."))')"
-
-          echo "GitHub Actions CIDRs:"
-          echo "$NEW_CIDRS"
-
-          echo "Reading current SG SSH(22) CIDRs..."
-          CURRENT_CIDRS="$(aws ec2 describe-security-groups \
-            --group-ids "$SG_ID" \
-            --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\` && ToPort==\`22\` && IpProtocol==\`tcp\`].IpRanges[].CidrIp" \
-            --output text | tr '\t' '\n' | sort -u || true)"
-
-          CURRENT_MARKED_CIDRS="$(aws ec2 describe-security-groups \
-            --group-ids "$SG_ID" \
-            --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\` && ToPort==\`22\` && IpProtocol==\`tcp\`].IpRanges[?Description=='github-actions-ssh'].CidrIp" \
-            --output text | tr '\t' '\n' | sort -u || true)"
-
-          echo "Currently-marked CIDRs (managed by workflow):"
-          echo "${CURRENT_MARKED_CIDRS:-<none>}"
-
-          while read -r cidr; do
-            [[ -z "$cidr" ]] && continue
-            if ! echo "$NEW_CIDRS" | grep -qx "$cidr"; then
-              echo "Revoking old CIDR: $cidr"
-              aws ec2 revoke-security-group-ingress \
-                --group-id "$SG_ID" \
-                --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$cidr,Description=github-actions-ssh}]"
-            fi
-          done <<< "${CURRENT_MARKED_CIDRS:-}"
-
-          while read -r cidr; do
-            [[ -z "$cidr" ]] && continue
-            if ! echo "$CURRENT_CIDRS" | grep -qx "$cidr"; then
-              echo "Authorizing new CIDR: $cidr"
-              aws ec2 authorize-security-group-ingress \
-                --group-id "$SG_ID" \
-                --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$cidr,Description=github-actions-ssh}]"
-            else
-              # CIDR already exists (maybe your old manual allowlist). We won't touch.
-              echo "Already present: $cidr"
-            fi
-          done <<< "$NEW_CIDRS"
-
-          echo "Done syncing SG allowlist."
-
+          aws ec2 authorize-security-group-ingress \
+            --region "$AWS_REGION" \
+            --group-id "$SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP,Description=github-actions-ssh-temp}]"
 
       - name: Setup SSH
         run: |
@@ -109,3 +70,21 @@ jobs:
             sudo systemctl restart tomato
             sudo systemctl status tomato --no-pager -l
           EOF
+
+      - name: Remove temporary runner IP allowlist
+        if: always()
+        shell: bash
+        env:
+          SG_ID: ${{ secrets.EC2_SG_ID }}
+          AWS_REGION: us-west-2
+        run: |
+          set +e
+
+          RUNNER_IP="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')/32"
+          echo "Removing runner IP: $RUNNER_IP"
+
+          aws ec2 revoke-security-group-ingress \
+            --region "$AWS_REGION" \
+            --group-id "$SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP,Description=github-actions-ssh-temp}]" \
+          || true
