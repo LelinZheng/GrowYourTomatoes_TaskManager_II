@@ -28,6 +28,13 @@ jobs:
 
       - name: Build backend jar
         run: mvn -DskipTests clean package
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
 
       - name: Sync GitHub Actions IPs to EC2 SG (SSH allowlist)
         shell: bash
@@ -39,7 +46,7 @@ jobs:
           echo "Fetching GitHub meta..."
           META_JSON="$(curl -fsSL https://api.github.com/meta)"
 
-          NEW_CIDRS="$(echo "$META_JSON" | jq -r '.actions[]')"
+          NEW_CIDRS="$(echo "$META_JSON" | jq -r '.actions[] | select(contains("."))')"
 
           echo "GitHub Actions CIDRs:"
           echo "$NEW_CIDRS"
