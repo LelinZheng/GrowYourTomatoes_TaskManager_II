@@ -36,40 +36,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
         
-      - name: Cleanup old GitHub Actions SSH rules (one-time)
-        shell: bash
-        env:
-          SG_ID: ${{ secrets.EC2_SG_ID }}
-          AWS_REGION: us-west-2
-        run: |
-          set -euo pipefail
-
-          echo "Finding old SG rules with description 'github-actions-ssh'..."
-          RULE_IDS="$(aws ec2 describe-security-group-rules \
-            --region "$AWS_REGION" \
-            --filters "Name=group-id,Values=$SG_ID" \
-                      "Name=ip-protocol,Values=tcp" \
-                      "Name=from-port,Values=22" \
-                      "Name=to-port,Values=22" \
-            --query "SecurityGroupRules[?IsEgress==\`false\` && Description==\`github-actions-ssh\`].SecurityGroupRuleId" \
-            --output text || true)"
-
-          if [[ -z "${RULE_IDS// }" ]]; then
-            echo "No old github-actions-ssh rules found. Nothing to delete."
-            exit 0
-          fi
-
-          echo "Deleting these rule IDs:"
-          echo "$RULE_IDS" | tr '\t' '\n'
-
-          # delete-security-group-rules accepts multiple IDs
-          aws ec2 delete-security-group-rules \
-            --region "$AWS_REGION" \
-            --group-id "$SG_ID" \
-            --security-group-rule-ids $RULE_IDS
-
-          echo "Cleanup complete."
-
       - name: Temporarily allow this runner IP for SSH
         shell: bash
         env:
