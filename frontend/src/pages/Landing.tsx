@@ -70,7 +70,7 @@ export default function Landing() {
             </header>
   
         <footer className="landing-footer">
-          © 2025 Tomato Tasks · Built with 💚
+          © 2026 Tomato Tasks · Built with 💚
         </footer>
       </div>
     );
