@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storageService } from './storage.service';
 import api from './api/axiosConfig';
 import { AUTH_ENDPOINTS } from './api/endpoints';
 import { User, AuthResponse, LoginRequest, RegisterRequest } from '../types/User';
@@ -11,8 +11,14 @@ export const authService = {
     );
     
     if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      // Token is stored securely via storageService
+      await storageService.setItem('token', response.data.token);
+      // User info stored in AsyncStorage (non-sensitive) if present; otherwise remove
+      if (response.data.user) {
+        await storageService.setItem('user', response.data.user);
+      } else {
+        await storageService.removeItem('user');
+      }
     }
     
     return response.data;
@@ -25,29 +31,34 @@ export const authService = {
     );
     
     if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      // Token is stored securely via storageService
+      await storageService.setItem('token', response.data.token);
+      // User info stored in AsyncStorage (non-sensitive) if present; otherwise remove
+      if (response.data.user) {
+        await storageService.setItem('user', response.data.user);
+      } else {
+        await storageService.removeItem('user');
+      }
     }
     
     return response.data;
   },
 
   async logout(): Promise<void> {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
+    await storageService.removeItem('token');
+    await storageService.removeItem('user');
   },
 
   async getCurrentUser(): Promise<User | null> {
-    const userString = await AsyncStorage.getItem('user');
-    return userString ? JSON.parse(userString) : null;
+    return await storageService.getItem<User>('user');
   },
 
   async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem('token');
+    return await storageService.getItem<string>('token');
   },
 
   async isAuthenticated(): Promise<boolean> {
-    const token = await AsyncStorage.getItem('token');
+    const token = await authService.getToken();
     return !!token;
   },
 };

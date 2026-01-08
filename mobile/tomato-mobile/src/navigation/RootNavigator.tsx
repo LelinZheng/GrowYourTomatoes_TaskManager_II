@@ -1,32 +1,22 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
-import { RootStackParamList } from './types';
+import { SplashScreen } from '../screens/auth/SplashScreen';
+import { AuthNavigator } from './AuthNavigator';
+import { AppNavigator } from './AppNavigator';
 
-// Placeholder for screens - to be implemented
-const AuthNavigator = () => null;
-const AppNavigator = () => null;
-const SplashScreen = () => null;
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
+// Bypass NavigationContainer entirely to avoid native boolean/string errors
 export const RootNavigator: React.FC = () => {
-  const { isSignedIn, isLoading } = useAuth();
+  const auth = useAuth();
+  
+  if (!auth) {
+    return null;
+  }
+  
+  const { isSignedIn, isLoading } = auth;
 
   if (isLoading) {
     return <SplashScreen />;
   }
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isSignedIn ? (
-          <Stack.Screen name="App" component={AppNavigator} />
-        ) : (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  return isSignedIn ? <AppNavigator /> : <AuthNavigator />;
 };

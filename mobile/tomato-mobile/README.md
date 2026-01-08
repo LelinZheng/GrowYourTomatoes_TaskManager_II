@@ -123,7 +123,7 @@ npm run web
 
 The mobile app connects to the same backend as the web app using the same REST API endpoints:
 
-- **Authentication**: `/api/auth/login`, `/api/auth/register`
+- **Authentication**: `/auth/login`, `/auth/register`
 - **Tasks**: `/api/tasks` (CRUD operations)
 - **Garden**: `/api/garden/stats`, `/api/garden/punishments`
 - **Tomatoes**: `/api/tomatoes/current`, `/api/tomatoes/history`

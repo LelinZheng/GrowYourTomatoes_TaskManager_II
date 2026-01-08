@@ -4,36 +4,43 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 import { validation } from '../../utils/validation';
 
-interface LoginScreenProps {
-  onNavigateToRegister?: () => void;
+interface RegisterScreenProps {
+  onBackToLogin?: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }) => {
-  const { signIn } = useAuth();
+export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin }) => {
+  const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [username, setUsername] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; username?: string } = {};
     
     if (!email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!validation.isValidEmail(email)) {
       newErrors.email = 'Invalid email format';
+    }
+
+    if (!username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (!validation.isValidUsername(username)) {
+      newErrors.username = 'Username must be 3+ characters (alphanumeric & underscore)';
     }
 
     if (!password) {
@@ -46,17 +53,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
     setGeneralError('');
 
     try {
-      await signIn(email, password);
+      await signUp(email, password, username);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Login failed. Please try again.';
+        error instanceof Error ? error.message : 'Registration failed. Please try again.';
       setGeneralError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -67,7 +74,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>🍅 TomatoTasks</Text>
-        <Text style={styles.subtitle}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Create Account</Text>
 
         {generalError ? (
           <View style={styles.errorContainer}>
@@ -92,6 +99,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
           </View>
 
           <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={[styles.input, errors.username && styles.inputError]}
+              placeholder="your_username"
+              placeholderTextColor={colors.gray400}
+              value={username}
+              onChangeText={setUsername}
+              editable={!isLoading}
+              autoCapitalize="none"
+            />
+            {errors.username && <Text style={styles.fieldError}>{errors.username}</Text>}
+          </View>
+
+          <View style={styles.fieldContainer}>
             <Text style={styles.label}>Password</Text>
             <TextInput
               style={[styles.input, errors.password && styles.inputError]}
@@ -106,22 +127,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
           </View>
 
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
+            style={[styles.registerButton, isLoading && styles.buttonDisabled]}
+            onPress={handleRegister}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.registerButtonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={onNavigateToRegister} disabled={isLoading}>
-            <Text style={styles.linkText}>Sign Up</Text>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <TouchableOpacity onPress={onBackToLogin} disabled={isLoading}>
+            <Text style={styles.linkText}>Login</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -191,7 +212,7 @@ const styles = StyleSheet.create({
     color: colors.danger,
     marginTop: spacing.sm,
   },
-  loginButton: {
+  registerButton: {
     backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: 8,
@@ -202,7 +223,7 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
-  loginButtonText: {
+  registerButtonText: {
     color: colors.white,
     ...typography.button,
   },
