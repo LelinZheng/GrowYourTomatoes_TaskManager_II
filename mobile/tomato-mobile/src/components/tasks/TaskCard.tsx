@@ -12,6 +12,13 @@ interface TaskCardProps {
   onDelete: (taskId: number) => void;
 }
 
+const formatDue = (dateString: string) => {
+  const date = new Date(dateString);
+  const datePart = date.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const timePart = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${datePart}, ${timePart}`;
+};
+
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, onDelete }) => {
   const getPriorityColor = () => {
     switch (task.priority) {
@@ -45,7 +52,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
         {task.dueTime && (
           <View style={styles.dueTimeContainer}>
             <Text style={[styles.dueTime, task.expired && styles.dueTimeExpired]}>
-              ⏰ Due: {new Date(task.dueTime).toLocaleString()}
+              ⏰ Due: {formatDue(task.dueTime)}
             </Text>
           </View>
         )}

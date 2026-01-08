@@ -97,7 +97,7 @@ export const AppNavigator: React.FC = () => {
             onPress={() => setCurrentScreen('tasks')}
           >
             <Text style={[styles.tabIcon, currentScreen === 'tasks' && styles.tabIconActive]}>
-              ✓
+              📋
             </Text>
             <Text style={[styles.tabLabel, currentScreen === 'tasks' && styles.tabLabelActive]}>
               Tasks
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   comingSoon: {
-    fontSize: 48,
+    fontSize: 42,
     marginBottom: spacing.md,
   },
   comingSoonSubtitle: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.primary,
   },
   tabIcon: {
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: spacing.xs / 2,
   },
   tabIconActive: {

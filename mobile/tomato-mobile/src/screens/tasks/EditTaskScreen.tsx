@@ -8,8 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTasks } from '../../hooks/useTasks';
 import { Task, UpdateTaskRequest } from '../../types/Task';
 import { colors } from '../../styles/colors';
@@ -21,6 +23,25 @@ interface EditTaskScreenProps {
   onBack?: () => void;
   onSuccess?: () => void;
 }
+ 
+const toLocalDateTimeString = (date: Date) => {
+  // Force seconds to 00 to match backend expectation
+  const normalized = new Date(date);
+  normalized.setSeconds(0, 0);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const year = normalized.getFullYear();
+  const month = pad(normalized.getMonth() + 1);
+  const day = pad(normalized.getDate());
+  const hours = pad(normalized.getHours());
+  const minutes = pad(normalized.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}:00`;
+};
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+const formatTime = (date: Date) =>
+  date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
 
 export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, onSuccess }) => {
   const { updateTask } = useTasks();
@@ -28,21 +49,10 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>(task.priority);
-  const [dueTime, setDueTime] = useState('');
+  const [dueDate, setDueDate] = useState<Date | null>(task.dueTime ? new Date(task.dueTime) : null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (task.dueTime) {
-      // Convert ISO to local format
-      const date = new Date(task.dueTime);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      setDueTime(`${year}-${month}-${day} ${hours}:${minutes}`);
-    }
-  }, [task.dueTime]);
 
   const handleUpdate = async () => {
     if (!title.trim()) {
@@ -50,11 +60,11 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
       return;
     }
 
-    // Validate due time format if provided
-    if (dueTime.trim()) {
-      const date = new Date(dueTime);
-      if (isNaN(date.getTime())) {
-        Alert.alert('Error', 'Invalid date format. Use: YYYY-MM-DD HH:MM');
+    // Validate due time is in the future
+    if (dueDate) {
+      const now = new Date();
+      if (dueDate < now) {
+        Alert.alert('Error', 'Due time must be in the future');
         return;
       }
     }
@@ -65,8 +75,9 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
         title: title.trim(),
         description: description.trim() || undefined,
         priority,
-        dueTime: dueTime.trim() ? new Date(dueTime).toISOString() : null,
-        timeBombEnabled: !!dueTime.trim(),
+        // Send local time string so backend LocalDateTime stores without timezone shifts
+        dueTime: dueDate ? toLocalDateTimeString(dueDate) : null,
+        timeBombEnabled: !!dueDate,
       };
 
       await updateTask(task.id, updateData);
@@ -188,19 +199,100 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
 
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Due Time (optional)</Text>
-            <Text style={styles.helperText}>Format: YYYY-MM-DD HH:MM (e.g., 2026-01-15 14:30)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="2026-01-15 14:30"
-              placeholderTextColor={colors.gray400}
-              value={dueTime}
-              onChangeText={setDueTime}
-              editable={!isLoading}
-            />
-            {dueTime.trim() && (
-              <Text style={styles.timeBombNote}>
-                ⏰ Time bomb will be enabled for this task
+            
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+              disabled={isLoading}
+            >
+              <Text style={dueDate ? styles.dateButtonTextSelected : styles.dateButtonTextPlaceholder}>
+                {dueDate ? `${formatDate(dueDate)} • ${formatTime(dueDate)}` : 'Select Date & Time'}
               </Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={dueDate || new Date()}
+                mode={Platform.OS === 'ios' ? 'datetime' : 'date'}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                is24Hour={false}
+                minimumDate={new Date()}
+                onChange={(event, selectedDate) => {
+                  // Always close the date picker after a user action
+                  setShowDatePicker(false);
+
+                  if (event.type === 'set' && selectedDate) {
+                    if (Platform.OS === 'ios') {
+                      // iOS datetime picker already includes time
+                      setDueDate(selectedDate);
+                    } else if (dueDate) {
+                      // Android: preserve time when selecting date
+                      const newDate = new Date(selectedDate);
+                      newDate.setHours(dueDate.getHours());
+                      newDate.setMinutes(dueDate.getMinutes());
+                      newDate.setSeconds(0);
+                      newDate.setMilliseconds(0);
+                      setDueDate(newDate);
+                      setShowTimePicker(true);
+                    } else {
+                      // Android first time: seed with current time, then open time picker
+                      const newDate = new Date(selectedDate);
+                      const now = new Date();
+                      newDate.setHours(now.getHours());
+                      newDate.setMinutes(now.getMinutes());
+                      newDate.setSeconds(0);
+                      newDate.setMilliseconds(0);
+                      setDueDate(newDate);
+                      setShowTimePicker(true);
+                    }
+                  }
+                }}
+              />
+            )}
+
+            {Platform.OS === 'android' && showTimePicker && (
+              <DateTimePicker
+                value={dueDate || new Date()}
+                mode="time"
+                display="default"
+                is24Hour={false}
+                onChange={(event, selectedDate) => {
+                  // Always close the time picker after a user action
+                  setShowTimePicker(false);
+
+                  if (event.type === 'set' && selectedDate) {
+                    if (dueDate) {
+                      // Preserve the date when selecting time
+                      const newDate = new Date(dueDate);
+                      newDate.setHours(selectedDate.getHours());
+                      newDate.setMinutes(selectedDate.getMinutes());
+                      newDate.setSeconds(0);
+                      newDate.setMilliseconds(0);
+                      setDueDate(newDate);
+                    } else {
+                      setDueDate(selectedDate);
+                    }
+                  }
+                }}
+              />
+            )}
+
+            {dueDate && (
+              <View style={styles.selectedDateContainer}>
+                <Text style={styles.timeBombNote}>
+                  ⏰ {formatDate(dueDate)} • {formatTime(dueDate)}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setDueDate(null);
+                    setShowDatePicker(false);
+                    setShowTimePicker(false);
+                  }}
+                  style={styles.clearButton}
+                >
+                  <Text style={styles.clearButtonText}>Clear</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
@@ -277,6 +369,36 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.warning,
     marginTop: spacing.xs,
+  },
+  dateButton: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  dateButtonTextPlaceholder: {
+    ...typography.body,
+    color: colors.gray400,
+  },
+  dateButtonTextSelected: {
+    ...typography.body,
+    color: colors.gray900,
+  },
+  selectedDateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  clearButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  clearButtonText: {
+    ...typography.caption,
+    color: colors.danger,
   },
   input: {
     backgroundColor: colors.white,

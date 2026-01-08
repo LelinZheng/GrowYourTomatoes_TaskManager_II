@@ -2,43 +2,43 @@ import { StyleSheet } from 'react-native';
 
 export const typography = StyleSheet.create({
   h1: {
-    fontSize: 32,
-    fontWeight: '700',
-    lineHeight: 40,
-  },
-  h2: {
     fontSize: 28,
     fontWeight: '700',
-    lineHeight: 36,
+    lineHeight: 34,
   },
-  h3: {
+  h2: {
     fontSize: 24,
     fontWeight: '700',
-    lineHeight: 32,
+    lineHeight: 30,
+  },
+  h3: {
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 26,
   },
   h4: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    lineHeight: 28,
-  },
-  body: {
-    fontSize: 16,
-    fontWeight: '400',
     lineHeight: 24,
   },
+  body: {
+    fontSize: 15,
+    fontWeight: '400',
+    lineHeight: 22,
+  },
   bodySmall: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
     lineHeight: 20,
   },
   caption: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '400',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   button: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    lineHeight: 24,
+    lineHeight: 22,
   },
 });
