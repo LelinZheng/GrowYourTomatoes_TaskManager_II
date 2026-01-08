@@ -29,7 +29,7 @@ public class SecurityConfig {
         .cors(withDefaults()) // <-- enable CORS only in local
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/auth/**", "/deep_ping").permitAll()
+            .requestMatchers("/auth/**", "/deep_ping","/error").permitAll()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
