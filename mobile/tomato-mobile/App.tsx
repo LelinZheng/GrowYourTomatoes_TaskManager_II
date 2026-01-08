@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthContextProvider } from './src/context/AuthContext';
 import { TaskContextProvider } from './src/context/TaskContext';
 import { GardenContextProvider } from './src/context/GardenContext';
@@ -14,16 +15,18 @@ const LoadingFallback = () => (
 
 export default function App() {
   return (
-    <AuthContextProvider>
-      <TaskContextProvider>
-        <GardenContextProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <RootNavigator />
-          </Suspense>
-          <StatusBar style="auto" />
-        </GardenContextProvider>
-      </TaskContextProvider>
-    </AuthContextProvider>
+    <SafeAreaProvider>
+      <AuthContextProvider>
+        <TaskContextProvider>
+          <GardenContextProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <RootNavigator />
+            </Suspense>
+            <StatusBar style="auto" />
+          </GardenContextProvider>
+        </TaskContextProvider>
+      </AuthContextProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { TaskListScreen } from '../screens/tasks/TaskListScreen';
+import { CreateTaskScreen } from '../screens/tasks/CreateTaskScreen';
+import { EditTaskScreen } from '../screens/tasks/EditTaskScreen';
+import { Task } from '../types/Task';
 import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
 import { typography } from '../styles/typography';
 
-// Temporary: bypass React Navigation entirely to avoid native boolean/string errors
+type Screen = 'tasks' | 'garden' | 'profile' | 'create-task' | 'edit-task';
+
 export const AppNavigator: React.FC = () => {
   const { signOut, user } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState<Screen>('tasks');
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -17,18 +24,111 @@ export const AppNavigator: React.FC = () => {
     }
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setCurrentScreen('edit-task');
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'tasks':
+        return (
+          <TaskListScreen
+            onCreateTask={() => setCurrentScreen('create-task')}
+            onEditTask={handleEditTask}
+          />
+        );
+      case 'create-task':
+        return (
+          <CreateTaskScreen
+            onBack={() => setCurrentScreen('tasks')}
+            onSuccess={() => setCurrentScreen('tasks')}
+          />
+        );
+      case 'edit-task':
+        return editingTask ? (
+          <EditTaskScreen
+            task={editingTask}
+            onBack={() => {
+              setEditingTask(null);
+              setCurrentScreen('tasks');
+            }}
+            onSuccess={() => {
+              setEditingTask(null);
+              setCurrentScreen('tasks');
+            }}
+          />
+        ) : null;
+      case 'garden':
+        return (
+          <View style={styles.centerContainer}>
+            <Text style={styles.comingSoon}>🍅 Garden View</Text>
+            <Text style={styles.comingSoonSubtitle}>Coming soon in Phase 3</Text>
+          </View>
+        );
+      case 'profile':
+        return (
+          <View style={styles.centerContainer}>
+            <Text style={styles.title}>Profile</Text>
+            {user && (
+              <Text style={styles.userInfo}>
+                {user.email || user.username}
+              </Text>
+            )}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🍅 Welcome to TomatoTasks!</Text>
-      <Text style={styles.subtitle}>You're logged in successfully</Text>
-      {user && (
-        <Text style={styles.userInfo}>Logged in as: {user.email || user.username}</Text>
-      )}
-      <Text style={styles.message}>Main app screens coming soon...</Text>
+      {renderScreen()}
+      
+      {/* Bottom Tab Bar */}
+      {currentScreen !== 'create-task' && currentScreen !== 'edit-task' && (
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'tasks' && styles.tabActive]}
+            onPress={() => setCurrentScreen('tasks')}
+          >
+            <Text style={[styles.tabIcon, currentScreen === 'tasks' && styles.tabIconActive]}>
+              ✓
+            </Text>
+            <Text style={[styles.tabLabel, currentScreen === 'tasks' && styles.tabLabelActive]}>
+              Tasks
+            </Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'garden' && styles.tabActive]}
+            onPress={() => setCurrentScreen('garden')}
+          >
+            <Text style={[styles.tabIcon, currentScreen === 'garden' && styles.tabIconActive]}>
+              🍅
+            </Text>
+            <Text style={[styles.tabLabel, currentScreen === 'garden' && styles.tabLabelActive]}>
+              Garden
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'profile' && styles.tabActive]}
+            onPress={() => setCurrentScreen('profile')}
+          >
+            <Text style={[styles.tabIcon, currentScreen === 'profile' && styles.tabIconActive]}>
+              👤
+            </Text>
+            <Text style={[styles.tabLabel, currentScreen === 'profile' && styles.tabLabelActive]}>
+              Profile
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -36,34 +136,33 @@ export const AppNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.backgroundGray,
+  },
+  centerContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
+    padding: spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#DC2626',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#374151',
-    marginBottom: 8,
+    ...typography.h1,
+    color: colors.gray900,
+    marginBottom: spacing.md,
     textAlign: 'center',
   },
   userInfo: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 16,
+    ...typography.body,
+    color: colors.gray600,
+    marginBottom: spacing.xl,
     textAlign: 'center',
   },
-  message: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 32,
+  comingSoon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  comingSoonSubtitle: {
+    ...typography.body,
+    color: colors.gray600,
     textAlign: 'center',
   },
   logoutButton: {
@@ -75,7 +174,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: {
-    color: colors.white,
     ...typography.button,
+    color: colors.white,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.sm,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  tabActive: {
+    borderTopWidth: 2,
+    borderTopColor: colors.primary,
+  },
+  tabIcon: {
+    fontSize: 24,
+    marginBottom: spacing.xs / 2,
+  },
+  tabIconActive: {
+    // Icons don't change color in this simple version
+  },
+  tabLabel: {
+    ...typography.caption,
+    color: colors.gray600,
+  },
+  tabLabelActive: {
+    color: colors.primary,
+    fontWeight: '600',
   },
 });
