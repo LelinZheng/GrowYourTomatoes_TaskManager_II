@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [tab, setTab] = useState<"ACTIVE" | "COMPLETED">("ACTIVE");
   const [resolveToastId, setResolveToastId] = useState(0);
+  const [editError, setEditError] = useState("");
+  const [sortMode, setSortMode] = useState<"CREATED_DESC" | "CREATED_ASC" | "PRIORITY_DESC" | "PRIORITY_ASC">("CREATED_DESC");
 
   const openCreateModal = () => setShowCreateModal(true);
   const closeCreateModal = () => {
@@ -83,6 +85,10 @@ export default function Dashboard() {
 
   const handleCreateTask = async (): Promise<boolean> => {
     setError("");
+    if (!title.trim()) {
+      setError("Title is required.");
+      return false;
+    }
   
     if (dueTime) {
       const now = new Date();
@@ -122,13 +128,15 @@ export default function Dashboard() {
     fetchAll();
   };
 
-  const handleDelete = async (taskId: number) => {
-    await api.delete(`/tasks/${taskId}`);
-    fetchAll();
-  };
+  // removed unused handleDelete to satisfy TypeScript noUnusedLocals
 
   const handleEditSave = async () => {
     if (!editingTask) return;
+    setEditError("");
+    if (!editingTask.title || !editingTask.title.trim()) {
+      setEditError("Title is required.");
+      return;
+    }
   
     const payload = {
       ...editingTask,
@@ -140,8 +148,29 @@ export default function Dashboard() {
     fetchAll();
   };
 
-  const activeTasks = tasks.filter((t) => !t.completed);
-  const completedTasks = tasks.filter((t) => t.completed);
+  const priorityRank: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+
+  const sortTasks = (list: Task[]) => {
+    const arr = [...list];
+    arr.sort((a, b) => {
+      switch (sortMode) {
+        case "CREATED_ASC":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "CREATED_DESC":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "PRIORITY_ASC":
+          return priorityRank[a.priority] - priorityRank[b.priority];
+        case "PRIORITY_DESC":
+          return priorityRank[b.priority] - priorityRank[a.priority];
+        default:
+          return 0;
+      }
+    });
+    return arr;
+  };
+
+  const activeTasks = sortTasks(tasks.filter((t) => !t.completed));
+  const completedTasks = sortTasks(tasks.filter((t) => t.completed));
 
   const openDeleteModal = (task: Task) => {
     setTaskToDelete(task);
@@ -197,6 +226,21 @@ export default function Dashboard() {
 
       <div className="container mt-4">
         <h1 className="mb-4">Dashboard</h1>
+
+        <div className="d-flex align-items-center gap-2 mb-3">
+          <span className="text-muted">Sort by:</span>
+          <select
+            className="form-select"
+            style={{ width: "240px" }}
+            value={sortMode}
+            onChange={(e) => setSortMode(e.target.value as any)}
+          >
+            <option value="CREATED_DESC">Created (Newest first)</option>
+            <option value="CREATED_ASC">Created (Oldest first)</option>
+            <option value="PRIORITY_DESC">Priority (High → Low)</option>
+            <option value="PRIORITY_ASC">Priority (Low → High)</option>
+          </select>
+        </div>
 
         {/* ======== STATS ======== */}
         <div className="d-flex gap-3 mb-4">
@@ -453,6 +497,7 @@ export default function Dashboard() {
             </div>
 
             <div className="modal-body">
+              {editError && <div className="alert alert-danger">{editError}</div>}
                 <label className="form-label">Title</label>
                 <input
                 className="form-control mb-2"
@@ -476,7 +521,7 @@ export default function Dashboard() {
                 className="form-control mb-2"
                 value={editingTask?.priority || "MEDIUM"}
                 onChange={(e) =>
-                    setEditingTask({ ...editingTask!, priority: e.target.value })
+                  setEditingTask({ ...editingTask!, priority: e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' })
                 }
                 >
                 <option value="LOW">Low</option>

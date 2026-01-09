@@ -10,6 +10,7 @@ import com.lelin.tomato.security.JWTUtil;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,7 +23,7 @@ public class AuthController {
   private final UserRepository userRepository;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+  public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
     User user = authService.register(request);
     return ResponseEntity.ok(Map.of(
         "message", "Registration successful",
@@ -30,7 +31,7 @@ public class AuthController {
     ));
   }
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+  public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
     String token = authService.login(request);
     User user = userRepository.findByEmail(request.getEmail()).orElse(null);
     return ResponseEntity.ok(Map.of("token", token, "user", user));

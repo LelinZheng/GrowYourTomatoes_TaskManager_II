@@ -12,11 +12,24 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const handleLogin = async () => {
     setError("");
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password;
+
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (trimmedPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email: trimmedEmail, password: trimmedPassword });
       login(res.data.token);
       navigate("/dashboard");
     } catch {
@@ -75,7 +88,13 @@ export default function Login() {
           <button
             className="btn btn-danger w-100"
             onClick={handleLogin}
-            disabled={loading || !email || !password}
+            disabled={
+              loading ||
+              !email ||
+              !password ||
+              password.length < 6 ||
+              !emailRegex.test(email)
+            }
           >
             {loading ? "Logging in..." : "Login"}
           </button>

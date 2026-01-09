@@ -1,6 +1,7 @@
 package com.lelin.tomato.controller;
 
 import com.lelin.tomato.model.Task;
+import jakarta.validation.Valid;
 import com.lelin.tomato.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +23,7 @@ public class TaskController {
   }
 
   @PostMapping
-  public Task createTask(@RequestBody Task task) {
+  public Task createTask(@Valid @RequestBody Task task) {
     return taskService.createTask(task, getLoggedInUserId());
   }
 
@@ -32,7 +33,7 @@ public class TaskController {
   }
 
   @PutMapping("/{id}")
-  public Task updateTask(@PathVariable Long id, @RequestBody Task task) {
+  public Task updateTask(@PathVariable Long id, @Valid @RequestBody Task task) {
     return taskService.updateTask(id, task, getLoggedInUserId());
   }
 

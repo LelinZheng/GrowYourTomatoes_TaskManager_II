@@ -2,6 +2,7 @@ package com.lelin.tomato.model;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class Task {
   private Long id;
 
   @Column(nullable = false)
+  @NotBlank(message = "Title must not be blank")
   private String title;
 
   private String description;

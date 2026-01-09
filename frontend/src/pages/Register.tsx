@@ -10,12 +10,30 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleRegister = async () => {
     setError("");
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password;
+
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!trimmedUsername) {
+      setError("Username is required.");
+      return;
+    }
+    if (trimmedPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.post("/auth/register", { username, email, password });
+      await api.post("/auth/register", { username: trimmedUsername, email: trimmedEmail, password: trimmedPassword });
       navigate("/login");
     } catch {
       setError("Email already exists (or invalid input).");
@@ -84,7 +102,7 @@ export default function Register() {
           <button
             className="btn btn-success w-100"
             onClick={handleRegister}
-            disabled={loading || !email || !username || !password}
+            disabled={loading}
           >
             {loading ? "Creating..." : "Create Account"}
           </button>
