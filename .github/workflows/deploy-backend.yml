@@ -28,14 +28,15 @@ jobs:
 
       - name: Build backend jar
         run: mvn -DskipTests clean package
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-        
+
+      # Allow this GitHub runner's public IP to SSH into EC2 (port 22)
       - name: Temporarily allow this runner IP for SSH
         shell: bash
         env:
@@ -47,26 +48,60 @@ jobs:
           RUNNER_IP="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')/32"
           echo "Runner public IP: $RUNNER_IP"
 
+          # Add rule (don't fail if it already exists)
           aws ec2 authorize-security-group-ingress \
             --region "$AWS_REGION" \
             --group-id "$SG_ID" \
-            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP,Description=github-actions-ssh-temp}]"
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP,Description=github-actions-ssh-temp}]" \
+          || echo "SSH ingress rule already exists (continuing)"
 
       - name: Setup SSH
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+
+          # Write key safely (strip CRLF)
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+          HOST="${{ secrets.EC2_HOST }}"
+          PORT="${{ secrets.EC2_SSH_PORT || '22' }}"
+
+          echo "Testing TCP connectivity to $HOST:$PORT"
+          nc -vz "$HOST" "$PORT"
+
+          echo "Adding host key to known_hosts"
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Upload jar to EC2
+        shell: bash
         run: |
-          scp target/*.jar \
+          scp -o StrictHostKeyChecking=yes target/*.jar \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/tomato/app/tomato.jar"
 
       - name: Restart backend service
+        shell: bash
         run: |
-          ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+          ssh -o StrictHostKeyChecking=yes "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
             sudo systemctl restart tomato
             sudo systemctl status tomato --no-pager -l
           EOF
+
+      # Always clean up the temp SSH rule to avoid hitting SG rule limits over time
+      - name: Revoke runner IP SSH rule
+        if: always()
+        shell: bash
+        env:
+          SG_ID: ${{ secrets.EC2_SG_ID }}
+          AWS_REGION: us-west-2
+        run: |
+          set -euo pipefail
+          RUNNER_IP="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')/32"
+          aws ec2 revoke-security-group-ingress \
+            --region "$AWS_REGION" \
+            --group-id "$SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP}]" \
+          || true
