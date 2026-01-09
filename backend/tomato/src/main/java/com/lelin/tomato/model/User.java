@@ -2,6 +2,7 @@ package com.lelin.tomato.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 
@@ -25,6 +26,7 @@ public class User {
   private String email;
 
   @Column(nullable = false)
+  @JsonIgnore
   private String password; // hashed password
 
   private LocalDateTime createdAt;
