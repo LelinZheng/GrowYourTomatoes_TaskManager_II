@@ -28,7 +28,7 @@ export const taskService = {
   },
 
   async completeTask(id: number): Promise<Task> {
-    const response = await axiosInstance.post<Task>(TASK_ENDPOINTS.COMPLETE(id));
+    const response = await axiosInstance.put<Task>(TASK_ENDPOINTS.COMPLETE(id));
     return response.data;
   },
 

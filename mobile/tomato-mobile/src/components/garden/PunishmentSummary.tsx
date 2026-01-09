@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Punishment, PunishmentType } from '../../types/Punishment';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
@@ -8,10 +8,10 @@ interface PunishmentSummaryProps {
   punishments: Punishment[];
 }
 
-const punishmentLabels: Record<PunishmentType, { label: string; emoji: string }> = {
+const punishmentLabels: Record<PunishmentType, { label: string; emoji?: string; icon?: any }> = {
   FOG: { label: 'Fog', emoji: '🌫️' },
-  WEEDS: { label: 'Weeds', emoji: '🌿' },
-  WILTED_LEAVES: { label: 'Wilted Leaves', emoji: '🍂' },
+  WEEDS: { label: 'Weeds', icon: require('../../assets/images/grass.png') },
+  WILTED_LEAVES: { label: 'Leaves', emoji: '🍂' },
   BUG: { label: 'Bugs', emoji: '🐛' },
   FUNGUS: { label: 'Fungus', emoji: '🍄' },
 };
@@ -45,12 +45,16 @@ export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishment
                 style={styles.icon}
                 onPress={() => setHoveredId(hoveredId === (type as any) ? null : (type as any))}
               >
-                <Text style={styles.emoji}>{info.emoji}</Text>
+                {info.icon ? (
+                  <Image source={info.icon} style={styles.weedIcon} resizeMode="contain" />
+                ) : (
+                  <Text style={styles.emoji}>{info.emoji}</Text>
+                )}
                 {count > 1 && <Text style={styles.badge}>{count}</Text>}
               </TouchableOpacity>
               {hoveredId === (type as any) && (
                 <View style={styles.tooltip}>
-                  <Text style={styles.tooltipText}>{info.label}</Text>
+                  <Text style={styles.tooltipText} numberOfLines={1} ellipsizeMode="clip">{info.label}</Text>
                 </View>
               )}
             </View>
@@ -89,6 +93,10 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 32,
   },
+  weedIcon: {
+    width: 36,
+    height: 36,
+  },
   badge: {
     position: 'absolute',
     top: -4,
@@ -106,15 +114,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -28,
     backgroundColor: colors.gray700,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs,
     paddingVertical: spacing.xs,
     borderRadius: 6,
     zIndex: 100,
   },
   tooltipText: {
     color: colors.white,
-    fontSize: 12,
+    fontSize: 9,
+    lineHeight: 11,
     fontWeight: '500',
+    minWidth: 44,
+    maxWidth: 56,
+    textAlign: 'center',
   },
   emptyContainer: {
     paddingVertical: spacing.md,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, RefreshControl, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GardenCanvas } from '../../components/garden/GardenCanvas';
 import { PunishmentSummary } from '../../components/garden/PunishmentSummary';
@@ -17,12 +17,10 @@ export const GardenScreen: React.FC = () => {
   const prevTomatoesRef = useRef<number>(0);
   const prevPunishmentsRef = useRef<number>(0);
 
-  // Fetch on mount
   useEffect(() => {
     refreshGarden();
   }, [refreshGarden]);
 
-  // Trigger +1 tomato toast when count increases
   useEffect(() => {
     if (tomatoCount > prevTomatoesRef.current) {
       setShowTomatoToast(true);
@@ -32,7 +30,6 @@ export const GardenScreen: React.FC = () => {
     prevTomatoesRef.current = tomatoCount;
   }, [tomatoCount]);
 
-  // Trigger punishment resolved toast when count decreases
   useEffect(() => {
     const punishmentCount = punishments.filter((p) => !p.resolved).length;
     if (punishmentCount < prevPunishmentsRef.current) {
@@ -50,20 +47,23 @@ export const GardenScreen: React.FC = () => {
   }, [refreshGarden]);
 
   const activePunishments = punishments.filter((p) => !p.resolved);
-  const fogCount = activePunishments.filter((p) => p.type === 'FOG').length;
-  const weedsCount = activePunishments.filter((p) => p.type === 'WEEDS').length;
-  const leavesCount = activePunishments.filter((p) => p.type === 'WILTED_LEAVES').length;
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: spacing.md, paddingTop: spacing.md + insets.top, paddingBottom: spacing.xl + insets.bottom }}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+    <View
+      style={[
+        styles.screen,
+        {
+          paddingTop: spacing.md + insets.top,
+          paddingBottom: spacing.md + insets.bottom,
+        },
+      ]}
     >
       <Text style={styles.title}>My Garden</Text>
 
       {isLoading && !punishments.length ? (
-        <View style={styles.loader}><ActivityIndicator /></View>
+        <View style={styles.loader}>
+          <ActivityIndicator />
+        </View>
       ) : (
         <>
           <View style={styles.statsRow}>
@@ -74,35 +74,42 @@ export const GardenScreen: React.FC = () => {
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>Punishments</Text>
               <Text style={styles.statValue}>{activePunishments.length}</Text>
-              <Text style={styles.statHint}>Fog {fogCount} · Weeds {weedsCount} · Leaves {leavesCount}</Text>
             </View>
           </View>
 
           <PunishmentSummary punishments={activePunishments} />
 
-          <GardenCanvas
-            tomatoes={tomatoCount}
-            punishments={activePunishments}
-            showTomatoToast={showTomatoToast}
-            showResolveToast={showResolveToast}
-          />
+          {/* IMPORTANT: fixed-height viewport so GardenCanvas can pin the soil */}
+          <View style={styles.gardenViewport}>
+            <GardenCanvas
+              tomatoes={tomatoCount}
+              punishments={activePunishments}
+              showTomatoToast={showTomatoToast}
+              showResolveToast={showResolveToast}
+              refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+            />
+          </View>
         </>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: colors.gray800,
-    marginBottom: spacing.md,
   },
   statsRow: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
@@ -123,12 +130,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.gray800,
   },
-  statHint: {
-    marginTop: 4,
-    color: colors.gray500,
-    fontSize: 12,
-  },
   loader: {
     paddingVertical: spacing.lg,
+  },
+  gardenViewport: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#e5f7e2',
   },
 });
