@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
 import { CreateTaskScreen } from '../screens/tasks/CreateTaskScreen';
 import { EditTaskScreen } from '../screens/tasks/EditTaskScreen';
+import { GardenScreen } from '../screens/main/GardenScreen';
 import { Task } from '../types/Task';
 import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
@@ -67,12 +68,7 @@ export const AppNavigator: React.FC = () => {
           />
         ) : null;
       case 'garden':
-        return (
-          <View style={styles.centerContainer}>
-            <Text style={styles.comingSoon}>🍅 Garden View</Text>
-            <Text style={styles.comingSoonSubtitle}>Coming soon in Phase 3</Text>
-          </View>
-        );
+        return <GardenScreen />;
       case 'profile':
         return (
           <SafeAreaView style={[styles.profileContainer, { paddingTop: insets.top + spacing.sm }]} edges={['top', 'left', 'right']}>

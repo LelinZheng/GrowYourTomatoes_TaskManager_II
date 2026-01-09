@@ -1,14 +1,13 @@
 import React, { createContext, useState, useCallback } from 'react';
-import { GardenStats, Punishment } from '../types/Punishment';
+import { Punishment } from '../types/Punishment';
 import { gardenService } from '../services/garden.service';
 
 export interface GardenContextType {
-  stats: GardenStats | null;
+  tomatoCount: number;
   punishments: Punishment[];
   isLoading: boolean;
   error: string | null;
-  fetchGardenStats: () => Promise<void>;
-  fetchPunishments: () => Promise<void>;
+  fetchGarden: () => Promise<void>;
   refreshGarden: () => Promise<void>;
   clearError: () => void;
 }
@@ -20,54 +19,52 @@ export interface GardenContextProviderProps {
 }
 
 export const GardenContextProvider: React.FC<GardenContextProviderProps> = ({ children }) => {
-  const [stats, setStats] = useState<GardenStats | null>(null);
+  const [tomatoCount, setTomatoCount] = useState<number>(0);
   const [punishments, setPunishments] = useState<Punishment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGardenStats = useCallback(async () => {
+  const fetchGarden = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const gardenStats = await gardenService.getGardenStats();
-      setStats(gardenStats);
+      const [tomatoCount, activePunishments] = await Promise.all([
+        gardenService.getTomatoesCount(),
+        gardenService.getActivePunishments(),
+      ]);
+      setTomatoCount(tomatoCount);
+      setPunishments(activePunishments);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch garden stats');
+      setError(err instanceof Error ? err.message : 'Failed to fetch garden data');
     } finally {
       setIsLoading(false);
-    }
-  }, []);
-
-  const fetchPunishments = useCallback(async () => {
-    try {
-      setError(null);
-      const fetchedPunishments = await gardenService.getPunishments();
-      setPunishments(fetchedPunishments);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch punishments');
     }
   }, []);
 
   const refreshGarden = useCallback(async () => {
     try {
       setError(null);
-      await Promise.all([fetchGardenStats(), fetchPunishments()]);
+      const [tomatoCount, activePunishments] = await Promise.all([
+        gardenService.getTomatoesCount(),
+        gardenService.getActivePunishments(),
+      ]);
+      setTomatoCount(tomatoCount);
+      setPunishments(activePunishments);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refresh garden');
     }
-  }, [fetchGardenStats, fetchPunishments]);
+  }, []);
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   const value: GardenContextType = {
-    stats,
+    tomatoCount,
     punishments,
     isLoading,
     error,
-    fetchGardenStats,
-    fetchPunishments,
+    fetchGarden,
     refreshGarden,
     clearError,
   };

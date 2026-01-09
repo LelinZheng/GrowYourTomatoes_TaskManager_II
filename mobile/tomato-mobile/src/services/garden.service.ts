@@ -1,32 +1,15 @@
 import api from './api/axiosConfig';
-import { GARDEN_ENDPOINTS, TOMATO_ENDPOINTS, PUNISHMENT_ENDPOINTS } from './api/endpoints';
-import { GardenStats, Punishment } from '../types/Punishment';
+import { GARDEN_ENDPOINTS, PUNISHMENT_ENDPOINTS } from './api/endpoints';
+import { Punishment } from '../types/Punishment';
 
 export const gardenService = {
-  async getGardenStats(): Promise<GardenStats> {
-    const response = await api.get<GardenStats>(GARDEN_ENDPOINTS.GET_STATS);
+  async getTomatoesCount(): Promise<number> {
+    const response = await api.get<number>(GARDEN_ENDPOINTS.GET_TOMATOES_COUNT);
     return response.data;
   },
 
-  async getPunishments(): Promise<Punishment[]> {
-    const response = await api.get<Punishment[]>(
-      GARDEN_ENDPOINTS.GET_PUNISHMENTS
-    );
-    return response.data;
-  },
-
-  async getCurrentTomatoes(): Promise<number> {
-    const response = await api.get<{ count: number }>(TOMATO_ENDPOINTS.GET_CURRENT);
-    return response.data.count;
-  },
-
-  async getTomatoHistory(): Promise<any[]> {
-    const response = await api.get(TOMATO_ENDPOINTS.GET_HISTORY);
-    return response.data;
-  },
-
-  async getAllPunishments(): Promise<Punishment[]> {
-    const response = await api.get<Punishment[]>(PUNISHMENT_ENDPOINTS.GET_ALL);
+  async getActivePunishments(): Promise<Punishment[]> {
+    const response = await api.get<Punishment[]>(GARDEN_ENDPOINTS.GET_PUNISHMENTS_ACTIVE);
     return response.data;
   },
 };

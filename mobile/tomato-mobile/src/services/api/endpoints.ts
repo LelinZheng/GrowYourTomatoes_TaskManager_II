@@ -18,14 +18,13 @@ export const TASK_ENDPOINTS = {
 
 // Garden endpoints
 export const GARDEN_ENDPOINTS = {
-  GET_STATS: '/garden/stats',
-  GET_PUNISHMENTS: '/garden/punishments',
+  GET_TOMATOES_COUNT: '/tomatoes/count',
+  GET_PUNISHMENTS_ACTIVE: '/punishments/active',
 };
 
 // Tomato endpoints
 export const TOMATO_ENDPOINTS = {
-  GET_CURRENT: '/tomatoes/current',
-  GET_HISTORY: '/tomatoes/history',
+  GET_COUNT: '/tomatoes/count',
 };
 
 // Punishment endpoints
