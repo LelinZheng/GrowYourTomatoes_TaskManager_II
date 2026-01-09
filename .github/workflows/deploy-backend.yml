@@ -1,5 +1,5 @@
 name: Deploy Backend to EC2
-# trigger redeploy on changes to backend code or this workflow file
+
 on:
   push:
     branches: [ "main" ]

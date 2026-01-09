@@ -27,7 +27,12 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     try {
       const currentUser = await authService.getCurrentUser();
       const isAuth = await authService.isAuthenticated();
-      setUser(currentUser);
+      let resolvedUser = currentUser;
+      // If we have a token but no cached user, fetch from backend
+      if (isAuth && !currentUser) {
+        resolvedUser = await authService.fetchMe();
+      }
+      setUser(resolvedUser);
       setIsSignedIn(isAuth);
     } catch (error) {
       console.error('Error bootstrapping auth:', error);

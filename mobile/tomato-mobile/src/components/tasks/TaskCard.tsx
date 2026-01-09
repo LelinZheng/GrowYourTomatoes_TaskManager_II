@@ -34,7 +34,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
   };
 
   return (
-    <View style={[styles.card, task.completed && styles.cardCompleted]}>
+    <View style={[
+      styles.card,
+      task.completed && styles.cardCompleted,
+      task.expired && styles.cardExpired,
+    ]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={[styles.title, task.completed && styles.titleCompleted]}>
@@ -54,6 +58,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
             <Text style={[styles.dueTime, task.expired && styles.dueTimeExpired]}>
               ⏰ Due: {formatDue(task.dueTime)}
             </Text>
+            {task.expired && (
+              <Text style={styles.expiredLabel}>EXPIRED</Text>
+            )}
           </View>
         )}
       </View>
@@ -104,6 +111,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray50,
     opacity: 0.7,
   },
+  cardExpired: {
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
+  },
   header: {
     marginBottom: spacing.md,
   },
@@ -140,6 +151,12 @@ const styles = StyleSheet.create({
   dueTimeExpired: {
     color: colors.danger,
     fontWeight: '600',
+  },
+  expiredLabel: {
+    ...typography.caption,
+    color: colors.danger,
+    fontWeight: '700',
+    marginTop: spacing.xs,
   },
   priorityBadge: {
     paddingHorizontal: spacing.sm,

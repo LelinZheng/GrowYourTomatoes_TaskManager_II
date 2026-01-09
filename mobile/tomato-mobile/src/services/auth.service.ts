@@ -13,10 +13,15 @@ export const authService = {
     if (response.data.token) {
       // Token is stored securely via storageService
       await storageService.setItem('token', response.data.token);
-      // User info stored in AsyncStorage (non-sensitive) if present; otherwise remove
-      if (response.data.user) {
-        await storageService.setItem('user', response.data.user);
-      } else {
+      // Fetch current user profile with token
+      try {
+        const me = await api.get<User>(AUTH_ENDPOINTS.ME, {
+          headers: { Authorization: `Bearer ${response.data.token}` },
+        });
+        await storageService.setItem('user', me.data);
+        response.data.user = me.data;
+      } catch (e) {
+        // If /auth/me not available, ensure user is cleared
         await storageService.removeItem('user');
       }
     }
@@ -33,10 +38,14 @@ export const authService = {
     if (response.data.token) {
       // Token is stored securely via storageService
       await storageService.setItem('token', response.data.token);
-      // User info stored in AsyncStorage (non-sensitive) if present; otherwise remove
-      if (response.data.user) {
-        await storageService.setItem('user', response.data.user);
-      } else {
+      // Fetch current user profile with token
+      try {
+        const me = await api.get<User>(AUTH_ENDPOINTS.ME, {
+          headers: { Authorization: `Bearer ${response.data.token}` },
+        });
+        await storageService.setItem('user', me.data);
+        response.data.user = me.data;
+      } catch (e) {
         await storageService.removeItem('user');
       }
     }
@@ -60,5 +69,17 @@ export const authService = {
   async isAuthenticated(): Promise<boolean> {
     const token = await authService.getToken();
     return !!token;
+  },
+
+  async fetchMe(): Promise<User | null> {
+    try {
+      const token = await this.getToken();
+      if (!token) return null;
+      const me = await api.get<User>(AUTH_ENDPOINTS.ME);
+      await storageService.setItem('user', me.data);
+      return me.data;
+    } catch (e) {
+      return null;
+    }
   },
 };
