@@ -46,6 +46,6 @@ public class PunishmentService {
   }
 
   public List<Punishment> getActiveForUser(Long userId) {
-    return punishmentRepo.findByUserIdAndResolvedFalse(userId);
+    return punishmentRepo.findByUserIdAndResolvedFalseOrderByCreatedAtAsc(userId);
   }
 }

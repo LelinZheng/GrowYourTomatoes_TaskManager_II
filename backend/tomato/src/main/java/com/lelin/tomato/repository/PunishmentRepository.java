@@ -12,5 +12,7 @@ public interface PunishmentRepository extends JpaRepository<Punishment, Long> {
 
   List<Punishment> findByUserIdAndResolvedFalse(Long userId);
 
+  List<Punishment> findByUserIdAndResolvedFalseOrderByCreatedAtAsc(Long userId);
+
   Optional<Punishment> findFirstByUserIdAndResolvedFalseOrderByCreatedAtAsc(Long userId);
 }
