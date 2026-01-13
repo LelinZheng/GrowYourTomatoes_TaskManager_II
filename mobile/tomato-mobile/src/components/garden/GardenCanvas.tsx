@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useEffect} from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, Dimensions } from 'react-native';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Animated, Dimensions, LayoutChangeEvent } from 'react-native';
 import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import { Punishment, PunishmentType } from '../../types/Punishment';
@@ -7,18 +7,20 @@ import { TomatoPlant } from './TomatoPlant';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
 
-const screenWidth = Dimensions.get('window').width;
+const { width: screenWidth } = Dimensions.get('window');
 
 const COLS = 2;
-const ROWS = 3;
-const MAX_PLANTS = COLS * ROWS;
-const PLANT_SIZE = (screenWidth - spacing.lg * 2 - spacing.md) / COLS;
+const ROWS = 2;
 
-const WEED_ROW_HEIGHT = 22;
-const WEED_ROW_GAP = 16;
-const WEED_BASE_BOTTOM = 10;
+const H_PADDING = spacing.md;
+const GAP = spacing.sm;
 
-const SOIL_HEIGHT = 140;
+const SOIL_HEIGHT = 66;
+
+const WEED_ROW_HEIGHT = 20;
+const WEED_ROW_GAP = 14;
+const WEED_BASE_BOTTOM = 2;
+const WEED_STICK_OUT = 8;
 
 interface GardenCanvasProps {
   tomatoes: number;
@@ -41,10 +43,22 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
   punishments,
   showTomatoToast,
   showResolveToast,
-  refreshControl, 
+  refreshControl,
 }) => {
+  const [viewportH, setViewportH] = useState(0);
+
+  const onLayoutViewport = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (h && Math.abs(h - viewportH) > 1) setViewportH(h);
+  };
+
   const plantCount = Math.max(1, Math.ceil(tomatoes / 5));
-  const scrollRef = useRef<ScrollView | null>(null);
+
+  const allIndices = useMemo(
+    () => Array.from({ length: plantCount }, (_, i) => plantCount - 1 - i),
+    [plantCount]
+  );
+
 
   const weedDrift = useRef(new Animated.Value(0)).current;
   const tomatoToastAnim = useRef(new Animated.Value(0)).current;
@@ -55,6 +69,19 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
   const leaves = punishments.filter((p) => p.type === 'WILTED_LEAVES');
   const scattered = punishments.filter((p) => p.type === 'BUG' || p.type === 'FUNGUS');
 
+  const cellW = (screenWidth - H_PADDING * 2 - GAP * (COLS - 1)) / COLS;
+
+  const gridTop = 6;
+  const gridBottom = 6;
+  const gridAreaH = Math.max(0, viewportH - SOIL_HEIGHT - gridTop - gridBottom);
+  const cellH = Math.floor((gridAreaH - GAP * (ROWS - 1)) / ROWS);
+
+  const plantSize = Math.max(0, Math.min(cellW, cellH) * 0.92);
+  const plantHeight = cellH;
+
+  const leafEmojisPerRow = Math.ceil(screenWidth / 16);
+  const leafEmojis = Array(leafEmojisPerRow).fill('🍂').join('');
+
   const scatterPositions = useMemo(() => {
     const map = new Map<number, { left: string; bottom: number }>();
     scattered
@@ -63,7 +90,7 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
       .forEach((p) => {
         map.set(p.id, {
           left: `${Math.random() * 80 + 10}%`,
-          bottom: Math.random() * 40,
+          bottom: Math.random() * 22,
         });
       });
     return map;
@@ -75,9 +102,9 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
       const anim = new Animated.Value(0);
       Animated.loop(
         Animated.sequence([
-          Animated.timing(anim, { toValue: 1, duration: 300 + idx * 50, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: -1, duration: 300 + idx * 50, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 300 + idx * 50, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 1, duration: 320 + idx * 40, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: -1, duration: 320 + idx * 40, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0, duration: 320 + idx * 40, useNativeDriver: true }),
         ])
       ).start();
       anims.set(p.id, anim);
@@ -112,93 +139,71 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
     }
   }, [showResolveToast, resolveToastAnim]);
 
-  const gridPlants = Math.min(plantCount, MAX_PLANTS);
-  const plantIndices = Array.from({ length: gridPlants }).map((_, i) => plantCount - 1 - i);
-  const additionalPlants = Math.max(0, plantCount - MAX_PLANTS);
-
-  const leafEmojisPerRow = Math.ceil(screenWidth / 16);
-  const leafEmojis = Array(leafEmojisPerRow).fill('🍂').join('');
-
   const isTooFoggy = fogs.length >= 5;
 
   return (
-    <View style={styles.wrapper}>
-      {/* ONLY trees scroll (always render) */}
-        <ScrollView
-          ref={scrollRef as any}
-          style={styles.treeScroller}
-          contentContainerStyle={{
-            paddingBottom: SOIL_HEIGHT + spacing.lg,
-            flexGrow: 1,
-          }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={refreshControl}
-        >
-          <View style={styles.grid}>
-            {plantIndices.map((idx) => (
-              <View key={`plant-${idx}`} style={styles.gridCell}>
-                <TomatoPlant tomatoes={Math.min(5, tomatoes - idx * 5)} />
-              </View>
-            ))}
-          </View>
-
-          {additionalPlants > 0 && (
-            <View style={styles.additionalPlantsSection}>
-              <Text style={styles.additionalTitle}>Older Plants</Text>
-              <View style={styles.grid}>
-                {Array.from({ length: additionalPlants }).map((_, idx) => {
-                  const actualIdx = MAX_PLANTS + idx;
-                  return (
-                    <View key={`plant-extra-${idx}`} style={styles.gridCell}>
-                      <TomatoPlant tomatoes={Math.min(5, tomatoes - actualIdx * 5)} />
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-        </ScrollView>
-
-      {/* PINNED soil layer */}
-      <View pointerEvents="none" style={styles.soilPinned}>
-        {weeds.slice(0, 2).map((_, idx) => (
-          <View
-            key={`weed-row-${idx}`}
-            style={[
-              styles.weedRowClip,
-              {
-                opacity: Math.max(0.35, 0.9 - idx * 0.15),
-                bottom: WEED_BASE_BOTTOM + idx * WEED_ROW_GAP,
-              },
-            ]}
-          >
-            <Animated.Image
-              source={require('../../assets/images/smaller_grass.png')}
-              style={[
-                styles.weedStripInner,
-                {
-                  transform: [
-                    { translateY: -10 },
-                    {
-                      translateX: weedDrift.interpolate({
-                        inputRange: [-1, 1],
-                        outputRange: [-8, 8],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-              resizeMode="repeat"
+    <View style={styles.wrapper} onLayout={onLayoutViewport}>
+      <FlatList
+        data={allIndices}
+        keyExtractor={(idx) => `plant-${idx}`}
+        numColumns={COLS}
+        contentContainerStyle={{
+          paddingTop: gridTop,
+          paddingBottom: SOIL_HEIGHT + gridBottom,
+          paddingHorizontal: H_PADDING,
+        }}
+        columnWrapperStyle={{ gap: GAP }}
+        refreshControl={refreshControl}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item: plantIndex }) => (
+          <View style={{ width: cellW, height: plantHeight, alignItems: 'center', justifyContent: 'flex-end', marginBottom: GAP }}>
+            <TomatoPlant
+              tomatoes={Math.min(5, Math.max(0, tomatoes - plantIndex * 5))}
+              size={plantSize}
             />
           </View>
-        ))}
+        )}
+      />
+
+      <View pointerEvents="none" style={[styles.soilPinned, { height: SOIL_HEIGHT }]}>
+        {weeds.length > 0 &&
+          [0, 1].map((row) => (
+            <View
+              key={`weed-row-${row}`}
+              style={[
+                styles.weedRowClip,
+                {
+                  bottom: WEED_BASE_BOTTOM + row * WEED_ROW_GAP,
+                },
+              ]}
+            >
+              <Animated.Image
+                source={require('../../assets/images/smaller_grass.png')}
+                style={[
+                  styles.weedStripInner,
+                  {
+                    transform: [
+                      { translateY: -WEED_STICK_OUT },
+                      {
+                        translateX: weedDrift.interpolate({
+                          inputRange: [-1, 1],
+                          outputRange: [-8, 8],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+                resizeMode="repeat"
+              />
+            </View>
+          ))}
 
         {leaves.map((_, idx) => (
           <Text
             key={`leaf-${idx}`}
             style={[
               styles.leafStrip,
-              { opacity: Math.max(0.35, 0.95 - idx * 0.15), bottom: idx * 8 },
+              { opacity: Math.max(0.35, 0.95 - idx * 0.15), bottom: 2 + idx * 6 },
             ]}
           >
             {leafEmojis}
@@ -206,7 +211,7 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
         ))}
 
         {scattered.map((p) => {
-          const pos = scatterPositions.get(p.id) || { left: '50%', bottom: 8 };
+          const pos = scatterPositions.get(p.id) || { left: '50%', bottom: 6 };
           const emoji = p.type === 'BUG' ? '🐛' : '🍄';
           const wiggle = wiggleAnims.get(p.id) || new Animated.Value(0);
 
@@ -236,13 +241,10 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
       </View>
 
       {fogs.map((_, idx) => (
-        <View
-          key={`fog-${idx}`}
-          pointerEvents="none"
-          style={[styles.fogLayer, { opacity: Math.min(0.75, 0.22 + idx * 0.12) }]}
-        />
+        <View key={`fog-${idx}`} pointerEvents="none" style={[styles.fogLayer, { opacity: Math.min(0.75, 0.22 + idx * 0.12) }]} />
       ))}
-      {fogs.length >= 5 && (
+
+      {isTooFoggy && (
         <View pointerEvents="none" style={styles.tooFoggyOverlay}>
           <View style={styles.tooFoggyCard}>
             <Text style={styles.tooFoggyTitle}>🌫️ Too Foggy to See</Text>
@@ -254,7 +256,6 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
         </View>
       )}
 
-      {/* Toasts pinned */}
       <Animated.View pointerEvents="none" style={[styles.toast, { opacity: tomatoToastAnim }]}>
         <Text style={styles.toastText}>+1 🍅</Text>
       </Animated.View>
@@ -267,50 +268,16 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: '#e5f7e2',
-    position: 'relative',
-  },
-  treeScroller: {
-    flex: 1,
-  },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: spacing.sm,
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  gridCell: {
-    width: PLANT_SIZE,
-    height: 150,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-
-  additionalPlantsSection: {
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  additionalTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray600,
-    marginBottom: spacing.md,
-  },
-
+  wrapper: { flex: 1, backgroundColor: '#e5f7e2', position: 'relative' },
   soilPinned: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: SOIL_HEIGHT,
     zIndex: 10,
+    backgroundColor: 'rgba(199,154,107,0.45)',
+    overflow: 'visible',
   },
-
   weedRowClip: {
     position: 'absolute',
     left: 0,
@@ -319,8 +286,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   weedStripInner: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: WEED_ROW_HEIGHT + WEED_STICK_OUT,
     width: '100%',
-    height: 45,
   },
   leafStrip: {
     position: 'absolute',
@@ -329,72 +300,35 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: 'center',
   },
-  scatter: {
-    position: 'absolute',
-    fontSize: 28,
-  },
-
-  fogLayer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#fff',
-    zIndex: 20,
-  },
-
-  toast: {
-    position: 'absolute',
-    top: 12,
-    alignSelf: 'center',
-    zIndex: 30,
-  },
-  toastText: {
-    fontWeight: '700',
-    fontSize: 18,
-    color: colors.gray800,
-  },
+  scatter: { position: 'absolute', fontSize: 28 },
+  fogLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff', zIndex: 20 },
+  toast: { position: 'absolute', top: 12, alignSelf: 'center', zIndex: 30 },
+  toastText: { fontWeight: '700', fontSize: 18, color: colors.gray800 },
   tooFoggyOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1000, // ✅ higher than fogLayer zIndex (yours was 20)
+    zIndex: 1000,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.lg,
   },
-
   tooFoggyCard: {
-    backgroundColor: 'rgba(20, 20, 20, 0.72)', // ✅ dark glass card so text pops
+    backgroundColor: 'rgba(20, 20, 20, 0.72)',
     borderRadius: 16,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     maxWidth: 320,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.22)',
-
     shadowColor: '#000',
     shadowOpacity: 0.25,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 8, // Android
+    elevation: 8,
   },
-
-  tooFoggyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-    color: '#FFFFFF',
-  },
-
-  tooFoggyText: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.92)',
-    lineHeight: 20,
-  },
+  tooFoggyTitle: { fontSize: 18, fontWeight: '800', textAlign: 'center', marginBottom: spacing.sm, color: '#FFFFFF' },
+  tooFoggyText: { fontSize: 14, textAlign: 'center', color: 'rgba(255,255,255,0.92)', lineHeight: 20 },
 });
