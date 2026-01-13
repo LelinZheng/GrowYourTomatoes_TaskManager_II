@@ -16,6 +16,8 @@ import { Task } from '../../types/Task';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
+import { gardenService } from '../../services/garden.service';
+import { Punishment } from '../../types/Punishment';
 
 type FilterType = 'all' | 'active' | 'completed';
 type SortType = 'priority' | 'created';
@@ -40,8 +42,50 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
 
   const handleComplete = useCallback(async (taskId: number) => {
     try {
+      // Get active punishments BEFORE completing
+      let beforeList: Punishment[] | null = null;
+      try {
+        beforeList = await gardenService.getActivePunishments();
+      } catch {}
+
+      // Complete the task
       await completeTask(taskId);
-      Alert.alert('Success', '🍅 Task completed! +1 Tomato');
+
+      // Get active punishments AFTER completing
+      let afterList: Punishment[] | null = null;
+      try {
+        afterList = await gardenService.getActivePunishments();
+      } catch {}
+
+      // Decide message: if punishments decreased, find which one was resolved
+      let message = '🍅 Task completed! +1 Tomato';
+      if (beforeList && afterList && afterList.length < beforeList.length) {
+        const afterIds = new Set(afterList.map((p) => p.id));
+        const resolved = beforeList.find((p) => !afterIds.has(p.id));
+        const emojiMap: Record<string, string> = {
+          FOG: '🌫️',
+          WEEDS: '🌿',
+          WILTED_LEAVES: '🍂',
+          BUG: '🐛',
+          FUNGUS: '🍄',
+        };
+        const labelMap: Record<string, string> = {
+          FOG: 'Fog',
+          WEEDS: 'Weeds',
+          WILTED_LEAVES: 'Wilted Leaves',
+          BUG: 'Bug',
+          FUNGUS: 'Fungus',
+        };
+        if (resolved) {
+          const emoji = emojiMap[resolved.type] ?? '🧹';
+          const label = labelMap[resolved.type] ?? 'Punishment';
+          message = `🧹 Resolved ${emoji} ${label}`;
+        } else {
+          message = '🧹 Punishment resolved';
+        }
+      }
+
+      Alert.alert('Success', message);
     } catch (error) {
       Alert.alert('Error', 'Failed to complete task');
     }

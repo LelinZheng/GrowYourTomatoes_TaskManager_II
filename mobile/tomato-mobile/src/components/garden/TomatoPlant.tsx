@@ -21,12 +21,17 @@ export const TomatoPlant: React.FC<TomatoPlantProps> = ({ tomatoes }) => {
   );
 };
 
+// Positions are percentages relative to the 110x140 wrapper
+// Leaf centers: leafA at left:20+35=55px, leafB at left:0+35=35px, leafC at right:0 means left:110-70+35=75px
 const tomatoPosition: Record<number, any> = {
-  0: { top: '7%', left: '50%', transform: [{ translateX: -12 }] },
-  1: { top: '25%', left: '25%', transform: [{ translateX: -12 }] },
-  2: { top: '25%', left: '75%', transform: [{ translateX: -12 }] },
-  3: { top: '45%', left: '35%', transform: [{ translateX: -12 }] },
-  4: { top: '45%', left: '65%', transform: [{ translateX: -12 }] },
+  // top center on leafA (center ~55px = 50%)
+  0: { top: '7%', left: '50%' },
+  // upper row on leafB (center ~35px = 31.8%) and leafC (center ~75px = 68.2%)
+  1: { top: '25%', left: '31.8%' },
+  2: { top: '25%', left: '68.2%' },
+  // lower row slightly inward from upper
+  3: { top: '45%', left: '36.4%' },
+  4: { top: '45%', left: '63.6%' },
 };
 
 const styles = StyleSheet.create({
@@ -88,7 +93,8 @@ const styles = StyleSheet.create({
   tomato: {
     position: 'absolute',
     fontSize: 24,
-    transform: [{ translateX: -9 }, { translateY: -9 }],
+    // center the 24px emoji on its left/top anchor
+    transform: [{ translateX: -12 }, { translateY: -12 }],
     textShadowColor: 'rgba(0,0,0,0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,

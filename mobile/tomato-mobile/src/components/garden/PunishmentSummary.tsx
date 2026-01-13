@@ -19,10 +19,19 @@ const punishmentLabels: Record<PunishmentType, { label: string; emoji?: string; 
 export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishments }) => {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
-  // Group and count by type
-  const grouped = new Map<PunishmentType, number>();
+  // Group and count by type (backend resolves oldest-first by createdAt, not by type)
+  const grouped = new Map<PunishmentType, { count: number; oldestCreatedAt: string }>();
   punishments.forEach((p) => {
-    grouped.set(p.type, (grouped.get(p.type) || 0) + 1);
+    const existing = grouped.get(p.type);
+    if (existing) {
+      existing.count++;
+      // Keep track of oldest createdAt for this type
+      if (p.createdAt < existing.oldestCreatedAt) {
+        existing.oldestCreatedAt = p.createdAt;
+      }
+    } else {
+      grouped.set(p.type, { count: 1, oldestCreatedAt: p.createdAt });
+    }
   });
 
   if (grouped.size === 0) {
@@ -33,11 +42,16 @@ export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishment
     );
   }
 
+  // Sort grouped entries by oldest createdAt to show which type will be resolved first
+  const sortedGroups = Array.from(grouped.entries()).sort(
+    ([, a], [, b]) => a.oldestCreatedAt.localeCompare(b.oldestCreatedAt)
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Active Punishments:</Text>
       <View style={styles.iconRow}>
-        {Array.from(grouped.entries()).map(([type, count]) => {
+        {sortedGroups.map(([type, { count }]) => {
           const info = punishmentLabels[type];
           return (
             <View key={type} style={styles.iconWrapper}>
