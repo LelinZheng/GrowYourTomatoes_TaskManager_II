@@ -31,12 +31,11 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
   
       setSoilPx(Math.floor(h * 0.25));
   
-      // --- responsive plant sizing ---
-      // base sizes (match your current plant wrapper)
+
       const BASE_W = 180;
-      const MIN_SCALE = 0.55;         // don't get too tiny
-      const SIDE_PADDING = 40;        // breathing room
-      const GAP = 24;                 // target spacing between plants
+      const MIN_SCALE = 0.55;         
+      const SIDE_PADDING = 40;        
+      const GAP = 24;                 
   
       const available = Math.max(0, w - SIDE_PADDING);
       const neededPerPlant = BASE_W + GAP;
@@ -149,7 +148,7 @@ export default function Garden({ tomatoes, punishments, lastEvent, tomatoToastId
   }, [scatteredPunishments, soilPx]);
 
   useEffect(() => {
-    if (!tomatoToastId) return; // ignore initial 0
+    if (!tomatoToastId) return;
     setShowTomatoToast(true);
     const t = setTimeout(() => setShowTomatoToast(false), 900);
     return () => clearTimeout(t);
