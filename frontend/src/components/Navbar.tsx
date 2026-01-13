@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 type NavbarProps = {
@@ -9,6 +10,7 @@ type NavbarProps = {
 
 export default function Navbar({ onCreateTask, activeTab, onTabChange }: NavbarProps) {
   const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   return (
     <nav className="navbar bg-light px-3 d-flex justify-content-between align-items-center">
@@ -40,6 +42,10 @@ export default function Navbar({ onCreateTask, activeTab, onTabChange }: NavbarP
         {/* Actions */}
         <button type="button" className="btn btn-success" onClick={onCreateTask}>
           + Create Task
+        </button>
+
+        <button type="button" className="btn btn-outline-primary" onClick={() => navigate("/profile")}>
+          👤 Profile
         </button>
 
         <button type="button" className="btn btn-outline-danger" onClick={logout}>

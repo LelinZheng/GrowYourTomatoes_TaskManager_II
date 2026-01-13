@@ -47,36 +47,38 @@ export default function Dashboard() {
   // EDIT MODE
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const fetchAll = () => {
-    api.get("/tasks").then((res) => setTasks(res.data));
-  
-    api.get("/tomatoes/count").then((res) => {
-      const newCount = res.data;
+  const fetchAll = async () => {
+    try {
+      const [tasksRes, tomatoesRes, punishmentsRes] = await Promise.all([
+        api.get("/tasks"),
+        api.get("/tomatoes/count"),
+        api.get("/punishments/active"),
+      ]);
+
+      setTasks(tasksRes.data);
+
+      const newCount = tomatoesRes.data;
       const prev = prevTomatoesRef.current;
-    
       setTomatoes(newCount);
-    
       if (newCount > prev) {
-        setTomatoToastId((v) => v + 1); // ✅ reliable trigger
+        setTomatoToastId((v) => v + 1);
       }
-    
       prevTomatoesRef.current = newCount;
-    });
-  
-    api.get("/punishments/active").then((res) => {
-      const list: Punishment[] = res.data;
+
+      const list: Punishment[] = punishmentsRes.data;
       setPunishmentsList(list);
-      const newCount = list.length;
-  
-      const prev = prevPunishmentsRef.current;
-      if (newCount > prev) {
+      const newPunishmentCount = list.length;
+      const prevP = prevPunishmentsRef.current;
+      if (newPunishmentCount > prevP) {
         setLastGardenEvent("PUNISHMENT_ADDED");
-      } else if (newCount < prev) {
+      } else if (newPunishmentCount < prevP) {
         setLastGardenEvent("PUNISHMENT_RESOLVED");
         setResolveToastId((v) => v + 1);
       }
-      prevPunishmentsRef.current = newCount;
-    });
+      prevPunishmentsRef.current = newPunishmentCount;
+    } catch (e) {
+      console.error("Fetch error", e);
+    }
   };
 
   useEffect(() => {
