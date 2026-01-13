@@ -4,12 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GardenCanvas } from '../../components/garden/GardenCanvas';
 import { PunishmentSummary } from '../../components/garden/PunishmentSummary';
 import { useGarden } from '../../hooks/useGarden';
+import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../styles/colors';
 import { spacing } from '../../styles/spacing';
 
 export const GardenScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { tomatoCount, punishments, isLoading, refreshGarden } = useGarden();
+  const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showTomatoToast, setShowTomatoToast] = useState(false);
   const [showResolveToast, setShowResolveToast] = useState(false);
@@ -47,6 +49,7 @@ export const GardenScreen: React.FC = () => {
   }, [refreshGarden]);
 
   const activePunishments = punishments.filter((p) => !p.resolved);
+  const title = user?.username ? `${user.username}'s Garden` : 'My Garden';
 
   return (
     <View
@@ -58,7 +61,7 @@ export const GardenScreen: React.FC = () => {
         },
       ]}
     >
-      <Text style={styles.title}>My Garden</Text>
+      <Text style={styles.title}>{title}</Text>
 
       {isLoading && !punishments.length ? (
         <View style={styles.loader}>

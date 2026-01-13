@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { User } from '../types/User';
 import { authService } from '../services/auth.service';
+import { userService } from '../services/user.service';
 
 export interface AuthContextType {
   user: User | null;
@@ -9,6 +10,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUsername: (username: string) => Promise<User>;
   bootstrapAsync: () => Promise<void>;
 }
 
@@ -75,6 +77,12 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     }
   };
 
+  const updateUsername = async (username: string) => {
+    const updatedUser = await userService.updateUsername(username);
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -82,6 +90,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     signIn,
     signUp,
     signOut,
+    updateUsername,
     bootstrapAsync,
   };
 

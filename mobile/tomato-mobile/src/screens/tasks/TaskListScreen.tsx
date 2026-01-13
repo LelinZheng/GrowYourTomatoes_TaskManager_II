@@ -20,7 +20,7 @@ import { gardenService } from '../../services/garden.service';
 import { Punishment } from '../../types/Punishment';
 
 type FilterType = 'all' | 'active' | 'completed';
-type SortType = 'priority' | 'created';
+type SortType = 'priority' | 'created_desc' | 'created_asc';
 
 interface TaskListScreenProps {
   onCreateTask?: () => void;
@@ -134,10 +134,13 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
         const bOrder = priorityOrder[b.priority] ?? 3;
         return aOrder - bOrder;
       });
-    } else {
-      // sort by created date (newest first)
-      filtered.sort((a, b) => 
+    } else if (sort === 'created_desc') {
+      filtered.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    } else {
+      filtered.sort((a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     }
 
@@ -207,11 +210,19 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.sortButton, sort === 'created' && styles.sortButtonActive]}
-          onPress={() => setSort('created')}
+          style={[styles.sortButton, sort === 'created_asc' && styles.sortButtonActive]}
+          onPress={() => setSort('created_asc')}
         >
-          <Text style={[styles.sortText, sort === 'created' && styles.sortTextActive]}>
-            Created
+          <Text style={[styles.sortText, sort === 'created_asc' && styles.sortTextActive]}>
+            Oldest
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.sortButton, sort === 'created_desc' && styles.sortButtonActive]}
+          onPress={() => setSort('created_desc')}
+        >
+          <Text style={[styles.sortText, sort === 'created_desc' && styles.sortTextActive]}>
+            Newest
           </Text>
         </TouchableOpacity>
       </View>

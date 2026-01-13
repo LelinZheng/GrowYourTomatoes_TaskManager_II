@@ -6,6 +6,11 @@ export const AUTH_ENDPOINTS = {
   ME: '/auth/me',
 };
 
+// User endpoints
+export const USER_ENDPOINTS = {
+  UPDATE_USERNAME: '/users/me/username',
+};
+
 // Task endpoints
 export const TASK_ENDPOINTS = {
   GET_ALL: '/tasks',
