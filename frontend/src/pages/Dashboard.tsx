@@ -324,7 +324,7 @@ export default function Dashboard() {
                     task.expired ? "list-group-item-danger" : ""
                   }`}
                 >
-                  <div>
+                  <div className="task-content" onClick={() => setEditingTask(task)}>
                     <strong>{task.title}</strong>
 
                     {task.description && (
@@ -346,23 +346,16 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  <div className="d-flex gap-2">
+                  <div className="d-flex gap-1">
                     <button
-                      className="btn btn-sm btn-primary"
+                      className="btn btn-xs btn-primary"
                       onClick={() => handleComplete(task.id)}
                     >
                       Complete
                     </button>
 
                     <button
-                      className="btn btn-sm btn-warning"
-                      onClick={() => setEditingTask(task)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-danger"
+                      className="btn btn-xs btn-danger"
                       onClick={() => openDeleteModal(task)}
                     >
                       Delete
@@ -384,7 +377,7 @@ export default function Dashboard() {
                   className="list-group-item d-flex justify-content-between align-items-center"
                   style={{ opacity: 0.6 }}
                 >
-                  <div>
+                  <div className="task-content" onClick={() => setEditingTask(task)}>
                     <strong className="text-decoration-line-through">{task.title}</strong>
 
                     {task.description && (
@@ -395,7 +388,7 @@ export default function Dashboard() {
                   </div>
 
                   <button
-                    className="btn btn-sm btn-danger"
+                    className="btn btn-xs btn-danger"
                     onClick={() => openDeleteModal(task)}
                   >
                     Delete
