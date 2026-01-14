@@ -10,10 +10,11 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { useTasks } from '../../hooks/useTasks';
 import { TaskCard } from '../../components/tasks/TaskCard';
 import { Task } from '../../types/Task';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 import { gardenService } from '../../services/garden.service';
@@ -29,6 +30,7 @@ interface TaskListScreenProps {
 
 export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, onEditTask }) => {
   const { tasks, isLoading, refreshTasks, completeTask, deleteTask } = useTasks();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sort, setSort] = useState<SortType>('priority');
@@ -42,6 +44,9 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
 
   const handleComplete = useCallback(async (taskId: number) => {
     try {
+      // Trigger haptic feedback
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
       // Get active punishments BEFORE completing
       let beforeList: Punishment[] | null = null;
       try {
@@ -92,9 +97,21 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
   }, [completeTask]);
 
   const handleDelete = useCallback((taskId: number) => {
+    const task = tasks.find(t => t.id === taskId);
+    
+    let message = 'Are you sure you want to delete this task?';
+    
+    if (task && task.completed) {
+      if ((task.tomatoesEarned ?? 0) > 0) {
+        message = 'This completed task earned you 1 tomato.\n\nDeleting it will remove 1 tomato from your total. Continue?';
+      } else {
+        message = 'This completed task did not earn a tomato (it resolved a punishment).\n\nDeleting it won\'t change your tomatoes. Continue?';
+      }
+    }
+    
     Alert.alert(
       'Delete Task',
-      'Are you sure you want to delete this task?',
+      message,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -110,7 +127,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
         },
       ]
     );
-  }, [deleteTask]);
+  }, [deleteTask, tasks]);
 
   const getFilteredTasks = useCallback(() => {
     let filtered = [...tasks];
@@ -151,77 +168,162 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
 
   if (isLoading && tasks.length === 0) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]} edges={['top', 'left', 'right']}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading tasks...</Text>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading tasks...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]} edges={['left', 'right', 'bottom']}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <Text style={styles.headerTitle}>Tomato Tasks 🍅</Text>
-        <TouchableOpacity style={styles.createButton} onPress={onCreateTask}>
-          <Text style={styles.createButtonText}>+ Create</Text>
+      <View style={[styles.header, { 
+        paddingTop: insets.top + spacing.md,
+        backgroundColor: theme.colors.surface,
+        borderBottomColor: theme.colors.border 
+      }]}>
+        <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>Tomato Tasks 🍅</Text>
+        <TouchableOpacity 
+          style={[styles.createButton, { backgroundColor: theme.colors.actionGreen }]} 
+          onPress={onCreateTask}
+        >
+          <Text style={[styles.createButtonText, { color: theme.colors.white }]}>+ Create</Text>
         </TouchableOpacity>
       </View>
 
       {/* Filters */}
-      <View style={styles.filters}>
+      <View style={[styles.filters, { backgroundColor: theme.colors.surface }]}>
         <TouchableOpacity
-          style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            { borderColor: theme.colors.border },
+            filter === 'all' && { 
+              backgroundColor: theme.colors.actionBlue,
+              borderColor: theme.colors.actionBlue 
+            }
+          ]}
           onPress={() => setFilter('all')}
         >
-          <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText,
+            { color: theme.colors.text },
+            filter === 'all' && { color: theme.colors.white }
+          ]}>
             All
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterButton, filter === 'active' && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            { borderColor: theme.colors.border },
+            filter === 'active' && { 
+              backgroundColor: theme.colors.actionBlue,
+              borderColor: theme.colors.actionBlue 
+            }
+          ]}
           onPress={() => setFilter('active')}
         >
-          <Text style={[styles.filterText, filter === 'active' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText,
+            { color: theme.colors.text },
+            filter === 'active' && { color: theme.colors.white }
+          ]}>
             Active
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterButton, filter === 'completed' && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            { borderColor: theme.colors.border },
+            filter === 'completed' && { 
+              backgroundColor: theme.colors.actionBlue,
+              borderColor: theme.colors.actionBlue 
+            }
+          ]}
           onPress={() => setFilter('completed')}
         >
-          <Text style={[styles.filterText, filter === 'completed' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText,
+            { color: theme.colors.text },
+            filter === 'completed' && { color: theme.colors.white }
+          ]}>
             Completed
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Sort */}
-      <View style={styles.sortRow}>
-        <Text style={styles.sortLabel}>Sort by:</Text>
+      <View style={[styles.sortRow, { 
+        backgroundColor: theme.colors.surface,
+        borderBottomColor: theme.colors.border 
+      }]}>
+        <Text style={[styles.sortLabel, { color: theme.colors.textSecondary }]}>Sort by:</Text>
         <TouchableOpacity
-          style={[styles.sortButton, sort === 'priority' && styles.sortButtonActive]}
+          style={[
+            styles.sortButton,
+            { borderColor: theme.colors.border },
+            sort === 'priority' && {
+              backgroundColor: theme.colors.backgroundSecondary,
+              borderColor: theme.colors.borderDark
+            }
+          ]}
           onPress={() => setSort('priority')}
         >
-          <Text style={[styles.sortText, sort === 'priority' && styles.sortTextActive]}>
+          <Text style={[
+            styles.sortText,
+            { color: theme.colors.textSecondary },
+            sort === 'priority' && { 
+              color: theme.colors.text,
+              fontWeight: '600' 
+            }
+          ]}>
             Priority
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.sortButton, sort === 'created_asc' && styles.sortButtonActive]}
+          style={[
+            styles.sortButton,
+            { borderColor: theme.colors.border },
+            sort === 'created_asc' && {
+              backgroundColor: theme.colors.backgroundSecondary,
+              borderColor: theme.colors.borderDark
+            }
+          ]}
           onPress={() => setSort('created_asc')}
         >
-          <Text style={[styles.sortText, sort === 'created_asc' && styles.sortTextActive]}>
+          <Text style={[
+            styles.sortText,
+            { color: theme.colors.textSecondary },
+            sort === 'created_asc' && { 
+              color: theme.colors.text,
+              fontWeight: '600' 
+            }
+          ]}>
             Oldest
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.sortButton, sort === 'created_desc' && styles.sortButtonActive]}
+          style={[
+            styles.sortButton,
+            { borderColor: theme.colors.border },
+            sort === 'created_desc' && {
+              backgroundColor: theme.colors.backgroundSecondary,
+              borderColor: theme.colors.borderDark
+            }
+          ]}
           onPress={() => setSort('created_desc')}
         >
-          <Text style={[styles.sortText, sort === 'created_desc' && styles.sortTextActive]}>
+          <Text style={[
+            styles.sortText,
+            { color: theme.colors.textSecondary },
+            sort === 'created_desc' && { 
+              color: theme.colors.text,
+              fontWeight: '600' 
+            }
+          ]}>
             Newest
           </Text>
         </TouchableOpacity>
@@ -247,15 +349,15 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>📝</Text>
-            <Text style={styles.emptyTitle}>No tasks found</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No tasks found</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
               {filter === 'active' && 'Create your first task to get started!'}
               {filter === 'completed' && 'Complete some tasks to see them here'}
               {filter === 'all' && 'Create a task to start growing tomatoes!'}
@@ -270,7 +372,6 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ onCreateTask, on
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundGray,
   },
   centerContainer: {
     flex: 1,
@@ -279,7 +380,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.body,
-    color: colors.gray600,
     marginTop: spacing.md,
   },
   header: {
@@ -288,49 +388,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   headerTitle: {
     ...typography.h1,
-    color: colors.primary,
   },
   createButton: {
-    backgroundColor: colors.actionGreen,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 6,
   },
   createButtonText: {
     ...typography.button,
-    color: colors.white,
   },
   filters: {
     flexDirection: 'row',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     gap: spacing.sm,
-    backgroundColor: colors.white,
   },
   filterButton: {
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
-  },
-  filterButtonActive: {
-    backgroundColor: colors.actionBlue,
-    borderColor: colors.actionBlue,
   },
   filterText: {
     ...typography.button,
-    color: colors.gray700,
-  },
-  filterTextActive: {
-    color: colors.white,
   },
   sortRow: {
     flexDirection: 'row',
@@ -338,32 +423,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.sm,
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   sortLabel: {
     ...typography.body,
-    color: colors.gray600,
   },
   sortButton: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  sortButtonActive: {
-    backgroundColor: colors.gray100,
-    borderColor: colors.gray300,
   },
   sortText: {
     ...typography.caption,
-    color: colors.gray600,
-  },
-  sortTextActive: {
-    color: colors.gray900,
-    fontWeight: '600',
   },
   listContent: {
     padding: spacing.md,
@@ -383,12 +455,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...typography.h2,
-    color: colors.gray900,
     marginBottom: spacing.sm,
   },
   emptySubtitle: {
     ...typography.body,
-    color: colors.gray600,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },

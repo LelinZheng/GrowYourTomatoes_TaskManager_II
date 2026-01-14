@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 import { validation } from '../../utils/validation';
@@ -21,6 +21,7 @@ interface LoginScreenProps {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }) => {
   const { signIn } = useAuth();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -64,64 +65,72 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>🍅 TomatoTasks</Text>
-        <Text style={styles.subtitle}>Welcome Back</Text>
+        <Text style={[styles.title, { color: theme.colors.primary }]}>🍅 TomatoTasks</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text }]}>Welcome Back</Text>
 
         {generalError ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{generalError}</Text>
+          <View style={[styles.errorContainer, { backgroundColor: theme.colors.danger }]}>
+            <Text style={[styles.errorText, { color: theme.colors.white }]}>{generalError}</Text>
           </View>
         ) : null}
 
         <View style={styles.form}>
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
             <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text 
+              }, errors.email && { borderColor: theme.colors.danger }]}
               placeholder="your@email.com"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textTertiary}
               value={email}
               onChangeText={setEmail}
               editable={!isLoading}
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
+            {errors.email && <Text style={[styles.fieldError, { color: theme.colors.danger }]}>{errors.email}</Text>}
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
             <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text 
+              }, errors.password && { borderColor: theme.colors.danger }]}
               placeholder="••••••••"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textTertiary}
               value={password}
               onChangeText={setPassword}
               editable={!isLoading}
               secureTextEntry
             />
-            {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
+            {errors.password && <Text style={[styles.fieldError, { color: theme.colors.danger }]}>{errors.password}</Text>}
           </View>
 
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+            style={[styles.loginButton, { backgroundColor: theme.colors.primary }, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color={theme.colors.white} />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={[styles.loginButtonText, { color: theme.colors.white }]}>Login</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Don't have an account? </Text>
           <TouchableOpacity onPress={onNavigateToRegister} disabled={isLoading}>
-            <Text style={styles.linkText}>Sign Up</Text>
+            <Text style={[styles.linkText, { color: theme.colors.primary }]}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -132,7 +141,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     flexGrow: 1,
@@ -141,24 +149,20 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
-    color: colors.primary,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   subtitle: {
     ...typography.h3,
-    color: colors.gray800,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
   errorContainer: {
-    backgroundColor: colors.danger,
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.lg,
   },
   errorText: {
-    color: colors.white,
     ...typography.body,
     textAlign: 'center',
   },
@@ -170,29 +174,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.body,
-    color: colors.gray800,
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.gray300,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     ...typography.body,
-    color: colors.gray800,
-  },
-  inputError: {
-    borderColor: colors.danger,
   },
   fieldError: {
     ...typography.caption,
-    color: colors.danger,
     marginTop: spacing.sm,
   },
   loginButton: {
-    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
@@ -203,7 +199,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   loginButtonText: {
-    color: colors.white,
     ...typography.button,
   },
   footer: {
@@ -213,11 +208,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.body,
-    color: colors.gray600,
   },
   linkText: {
     ...typography.body,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

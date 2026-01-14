@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 import { TaskListScreen } from '../screens/tasks/TaskListScreen';
 import { CreateTaskScreen } from '../screens/tasks/CreateTaskScreen';
 import { EditTaskScreen } from '../screens/tasks/EditTaskScreen';
 import { GardenScreen } from '../screens/main/GardenScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { Task } from '../types/Task';
-import { colors } from '../styles/colors';
 import { spacing } from '../styles/spacing';
 import { typography } from '../styles/typography';
 import { useTasks } from '../hooks/useTasks';
@@ -16,10 +16,10 @@ type Screen = 'tasks' | 'garden' | 'profile' | 'create-task' | 'edit-task';
 
 export const AppNavigator: React.FC = () => {
   const { signOut } = useAuth();
+  const { theme } = useTheme();
   const { tasks } = useTasks();
   const [currentScreen, setCurrentScreen] = useState<Screen>('tasks');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
 
   const totalTomatoes = tasks.reduce((sum, t) => sum + (t.tomatoesEarned || 0), 0);
 
@@ -72,8 +72,6 @@ export const AppNavigator: React.FC = () => {
         return (
           <ProfileScreen
             totalTomatoes={totalTomatoes}
-            darkMode={darkMode}
-            onToggleDarkMode={setDarkMode}
             onLogout={handleLogout}
           />
         );
@@ -83,44 +81,86 @@ export const AppNavigator: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]}>
       {renderScreen()}
       
       {/* Bottom Tab Bar */}
       {currentScreen !== 'create-task' && currentScreen !== 'edit-task' && (
-        <View style={styles.tabBar}>
+        <View style={[styles.tabBar, {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border
+        }]}>
           <TouchableOpacity
-            style={[styles.tab, currentScreen === 'tasks' && styles.tabActive]}
+            style={[
+              styles.tab,
+              currentScreen === 'tasks' && { 
+                borderTopWidth: 2,
+                borderTopColor: theme.colors.primary 
+              }
+            ]}
             onPress={() => setCurrentScreen('tasks')}
           >
-            <Text style={[styles.tabIcon, currentScreen === 'tasks' && styles.tabIconActive]}>
+            <Text style={styles.tabIcon}>
               📋
             </Text>
-            <Text style={[styles.tabLabel, currentScreen === 'tasks' && styles.tabLabelActive]}>
+            <Text style={[
+              styles.tabLabel,
+              { color: theme.colors.textSecondary },
+              currentScreen === 'tasks' && {
+                color: theme.colors.primary,
+                fontWeight: '600'
+              }
+            ]}>
               Tasks
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, currentScreen === 'garden' && styles.tabActive]}
+            style={[
+              styles.tab,
+              currentScreen === 'garden' && { 
+                borderTopWidth: 2,
+                borderTopColor: theme.colors.primary 
+              }
+            ]}
             onPress={() => setCurrentScreen('garden')}
           >
-            <Text style={[styles.tabIcon, currentScreen === 'garden' && styles.tabIconActive]}>
+            <Text style={styles.tabIcon}>
               🍅
             </Text>
-            <Text style={[styles.tabLabel, currentScreen === 'garden' && styles.tabLabelActive]}>
+            <Text style={[
+              styles.tabLabel,
+              { color: theme.colors.textSecondary },
+              currentScreen === 'garden' && {
+                color: theme.colors.primary,
+                fontWeight: '600'
+              }
+            ]}>
               Garden
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, currentScreen === 'profile' && styles.tabActive]}
+            style={[
+              styles.tab,
+              currentScreen === 'profile' && { 
+                borderTopWidth: 2,
+                borderTopColor: theme.colors.primary 
+              }
+            ]}
             onPress={() => setCurrentScreen('profile')}
           >
-            <Text style={[styles.tabIcon, currentScreen === 'profile' && styles.tabIconActive]}>
+            <Text style={styles.tabIcon}>
               👤
             </Text>
-            <Text style={[styles.tabLabel, currentScreen === 'profile' && styles.tabLabelActive]}>
+            <Text style={[
+              styles.tabLabel,
+              { color: theme.colors.textSecondary },
+              currentScreen === 'profile' && {
+                color: theme.colors.primary,
+                fontWeight: '600'
+              }
+            ]}>
               Profile
             </Text>
           </TouchableOpacity>
@@ -133,16 +173,13 @@ export const AppNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundGray,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     paddingBottom: spacing.md,
     paddingTop: spacing.sm,
-    shadowColor: colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -153,23 +190,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
-  tabActive: {
-    borderTopWidth: 2,
-    borderTopColor: colors.primary,
-  },
   tabIcon: {
     fontSize: 22,
     marginBottom: spacing.xs / 2,
   },
-  tabIconActive: {
-    // Icons don't change color in this simple version
-  },
   tabLabel: {
     ...typography.caption,
-    color: colors.gray600,
-  },
-  tabLabelActive: {
-    color: colors.primary,
-    fontWeight: '600',
   },
 });

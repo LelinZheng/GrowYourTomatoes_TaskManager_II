@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Punishment, PunishmentType } from '../../types/Punishment';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 
 interface PunishmentSummaryProps {
@@ -17,6 +17,7 @@ const punishmentLabels: Record<PunishmentType, { label: string; emoji?: string; 
 };
 
 export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishments }) => {
+  const { theme } = useTheme();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   // Group and count by type (backend resolves oldest-first by createdAt, not by type)
@@ -37,7 +38,7 @@ export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishment
   if (grouped.size === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>🎉 No active punishments — hooray!</Text>
+        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>🎉 No active punishments — hooray!</Text>
       </View>
     );
   }
@@ -49,7 +50,7 @@ export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishment
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Active Punishments:</Text>
+      <Text style={[styles.title, { color: theme.colors.textSecondary }]}>Active Punishments:</Text>
       <View style={styles.iconRow}>
         {sortedGroups.map(([type, { count }]) => {
           const info = punishmentLabels[type];
@@ -64,11 +65,17 @@ export const PunishmentSummary: React.FC<PunishmentSummaryProps> = ({ punishment
                 ) : (
                   <Text style={styles.emoji}>{info.emoji}</Text>
                 )}
-                {count > 1 && <Text style={styles.badge}>{count}</Text>}
+                {count > 1 && (
+                  <Text style={[styles.badge, { backgroundColor: theme.colors.danger, color: theme.colors.white }]}>
+                    {count}
+                  </Text>
+                )}
               </TouchableOpacity>
               {hoveredId === (type as any) && (
-                <View style={styles.tooltip}>
-                  <Text style={styles.tooltipText} numberOfLines={1} ellipsizeMode="clip">{info.label}</Text>
+                <View style={[styles.tooltip, { backgroundColor: theme.colors.textSecondary }]}>
+                  <Text style={[styles.tooltipText, { color: theme.colors.white }]} numberOfLines={1} ellipsizeMode="clip">
+                    {info.label}
+                  </Text>
                 </View>
               )}
             </View>
@@ -87,7 +94,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.gray700,
     marginBottom: spacing.sm,
   },
   iconRow: {
@@ -115,8 +121,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: colors.danger,
-    color: colors.white,
     borderRadius: 10,
     width: 20,
     height: 20,
@@ -127,14 +131,12 @@ const styles = StyleSheet.create({
   tooltip: {
     position: 'absolute',
     top: -28,
-    backgroundColor: colors.gray700,
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.xs,
     borderRadius: 6,
     zIndex: 100,
   },
   tooltipText: {
-    color: colors.white,
     fontSize: 9,
     lineHeight: 11,
     fontWeight: '500',
@@ -148,6 +150,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: colors.gray600,
   },
 });

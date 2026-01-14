@@ -5,13 +5,14 @@ import { GardenCanvas } from '../../components/garden/GardenCanvas';
 import { PunishmentSummary } from '../../components/garden/PunishmentSummary';
 import { useGarden } from '../../hooks/useGarden';
 import { useAuth } from '../../hooks/useAuth';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 
 export const GardenScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { tomatoCount, punishments, isLoading, refreshGarden } = useGarden();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showTomatoToast, setShowTomatoToast] = useState(false);
   const [showResolveToast, setShowResolveToast] = useState(false);
@@ -56,27 +57,28 @@ export const GardenScreen: React.FC = () => {
       style={[
         styles.screen,
         {
+          backgroundColor: theme.colors.background,
           paddingTop: spacing.md + insets.top,
           paddingBottom: spacing.md + insets.bottom,
         },
       ]}
     >
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
 
       {isLoading && !punishments.length ? (
         <View style={styles.loader}>
-          <ActivityIndicator />
+          <ActivityIndicator color={theme.colors.primary} />
         </View>
       ) : (
         <>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Tomatoes</Text>
-              <Text style={styles.statValue}>{tomatoCount}</Text>
+            <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Tomatoes</Text>
+              <Text style={[styles.statValue, { color: theme.colors.text }]}>{tomatoCount}</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Punishments</Text>
-              <Text style={styles.statValue}>{activePunishments.length}</Text>
+            <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Punishments</Text>
+              <Text style={[styles.statValue, { color: theme.colors.text }]}>{activePunishments.length}</Text>
             </View>
           </View>
 
@@ -101,14 +103,12 @@ export const GardenScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
     paddingHorizontal: spacing.md,
     gap: spacing.md,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.gray800,
   },
   statsRow: {
     flexDirection: 'row',
@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: spacing.md,
     shadowColor: '#000',
@@ -125,13 +124,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
   },
   statLabel: {
-    color: colors.gray500,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.gray800,
   },
   loader: {
     paddingVertical: spacing.lg,

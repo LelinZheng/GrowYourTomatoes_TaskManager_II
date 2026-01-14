@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import { Punishment, PunishmentType } from '../../types/Punishment';
 import { TomatoPlant } from './TomatoPlant';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -45,6 +45,7 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
   showResolveToast,
   refreshControl,
 }) => {
+  const { theme } = useTheme();
   const [viewportH, setViewportH] = useState(0);
 
   const onLayoutViewport = (e: LayoutChangeEvent) => {
@@ -257,11 +258,11 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
       )}
 
       <Animated.View pointerEvents="none" style={[styles.toast, { opacity: tomatoToastAnim }]}>
-        <Text style={styles.toastText}>+1 🍅</Text>
+        <Text style={[styles.toastText, { color: theme.colors.text }]}>+1 🍅</Text>
       </Animated.View>
 
       <Animated.View pointerEvents="none" style={[styles.toast, { top: 42, opacity: resolveToastAnim }]}>
-        <Text style={styles.toastText}>✅ Punishment resolved</Text>
+        <Text style={[styles.toastText, { color: theme.colors.text }]}>✅ Punishment resolved</Text>
       </Animated.View>
     </View>
   );
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
   scatter: { position: 'absolute', fontSize: 28 },
   fogLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff', zIndex: 20 },
   toast: { position: 'absolute', top: 12, alignSelf: 'center', zIndex: 30 },
-  toastText: { fontWeight: '700', fontSize: 18, color: colors.gray800 },
+  toastText: { fontWeight: '700', fontSize: 18 },
   tooFoggyOverlay: {
     position: 'absolute',
     top: 0,

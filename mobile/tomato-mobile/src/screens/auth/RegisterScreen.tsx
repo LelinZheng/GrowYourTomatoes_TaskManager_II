@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 import { validation } from '../../utils/validation';
@@ -21,6 +21,7 @@ interface RegisterScreenProps {
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin }) => {
   const { signUp } = useAuth();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -71,78 +72,90 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>🍅 TomatoTasks</Text>
-        <Text style={styles.subtitle}>Create Account</Text>
+        <Text style={[styles.title, { color: theme.colors.primary }]}>🍅 TomatoTasks</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text }]}>Create Account</Text>
 
         {generalError ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{generalError}</Text>
+          <View style={[styles.errorContainer, { backgroundColor: theme.colors.danger }]}>
+            <Text style={[styles.errorText, { color: theme.colors.white }]}>{generalError}</Text>
           </View>
         ) : null}
 
         <View style={styles.form}>
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
             <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text 
+              }, errors.email && { borderColor: theme.colors.danger }]}
               placeholder="your@email.com"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textTertiary}
               value={email}
               onChangeText={setEmail}
               editable={!isLoading}
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
+            {errors.email && <Text style={[styles.fieldError, { color: theme.colors.danger }]}>{errors.email}</Text>}
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Username</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Username</Text>
             <TextInput
-              style={[styles.input, errors.username && styles.inputError]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text 
+              }, errors.username && { borderColor: theme.colors.danger }]}
               placeholder="your_username"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textTertiary}
               value={username}
               onChangeText={setUsername}
               editable={!isLoading}
               autoCapitalize="none"
             />
-            {errors.username && <Text style={styles.fieldError}>{errors.username}</Text>}
+            {errors.username && <Text style={[styles.fieldError, { color: theme.colors.danger }]}>{errors.username}</Text>}
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
             <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text 
+              }, errors.password && { borderColor: theme.colors.danger }]}
               placeholder="••••••••"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textTertiary}
               value={password}
               onChangeText={setPassword}
               editable={!isLoading}
               secureTextEntry
             />
-            {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
+            {errors.password && <Text style={[styles.fieldError, { color: theme.colors.danger }]}>{errors.password}</Text>}
           </View>
 
           <TouchableOpacity
-            style={[styles.registerButton, isLoading && styles.buttonDisabled]}
+            style={[styles.registerButton, { backgroundColor: theme.colors.primary }, isLoading && styles.buttonDisabled]}
             onPress={handleRegister}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color={theme.colors.white} />
             ) : (
-              <Text style={styles.registerButtonText}>Sign Up</Text>
+              <Text style={[styles.registerButtonText, { color: theme.colors.white }]}>Sign Up</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
+          <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>Already have an account? </Text>
           <TouchableOpacity onPress={onBackToLogin} disabled={isLoading}>
-            <Text style={styles.linkText}>Login</Text>
+            <Text style={[styles.linkText, { color: theme.colors.primary }]}>Login</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -153,7 +166,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBackToLogin })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     flexGrow: 1,
@@ -162,24 +174,20 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
-    color: colors.primary,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   subtitle: {
     ...typography.h3,
-    color: colors.gray800,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
   errorContainer: {
-    backgroundColor: colors.danger,
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.lg,
   },
   errorText: {
-    color: colors.white,
     ...typography.body,
     textAlign: 'center',
   },
@@ -191,29 +199,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.body,
-    color: colors.gray800,
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.gray300,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     ...typography.body,
-    color: colors.gray800,
-  },
-  inputError: {
-    borderColor: colors.danger,
   },
   fieldError: {
     ...typography.caption,
-    color: colors.danger,
     marginTop: spacing.sm,
   },
   registerButton: {
-    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
@@ -224,7 +224,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   registerButtonText: {
-    color: colors.white,
     ...typography.button,
   },
   footer: {
@@ -234,11 +233,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.body,
-    color: colors.gray600,
   },
   linkText: {
     ...typography.body,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

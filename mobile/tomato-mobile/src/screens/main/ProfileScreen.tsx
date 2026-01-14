@@ -1,27 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { useAuth } from '../../hooks/useAuth';
-import { colors } from '../../styles/colors';
+import { useTheme, ThemeMode } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 import { validation } from '../../utils/validation';
 
 interface ProfileScreenProps {
   totalTomatoes: number;
-  darkMode: boolean;
-  onToggleDarkMode: (value: boolean) => void;
   onLogout: () => Promise<void>;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   totalTomatoes,
-  darkMode,
-  onToggleDarkMode,
   onLogout,
 }) => {
   const { user, updateUsername } = useAuth();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState(user?.username ?? '');
   const [error, setError] = useState('');
@@ -85,83 +82,179 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   return (
     <SafeAreaView
-      style={[styles.container, { paddingTop: insets.top + spacing.sm, paddingBottom: spacing.lg }]}
+      style={[styles.container, { 
+        backgroundColor: theme.colors.backgroundSecondary,
+        paddingTop: insets.top + spacing.sm, 
+        paddingBottom: spacing.lg 
+      }]}
       edges={['top', 'left', 'right']}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Profile</Text>
       </View>
 
-      <TouchableOpacity style={styles.profileCard} activeOpacity={0.8} onPress={() => setShowEditor(true)}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{avatarLetter}</Text>
+      <TouchableOpacity 
+        style={[styles.profileCard, {
+          backgroundColor: theme.colors.surface
+        }]} 
+        activeOpacity={0.8} 
+        onPress={() => setShowEditor(true)}
+      >
+        <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+          <Text style={[styles.avatarText, { color: theme.colors.white }]}>{avatarLetter}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.profileName}>{user?.username || user?.email}</Text>
-          <Text style={styles.profileSubtitle}>Keep growing your tomatoes — one task at a time.</Text>
-          <Text style={styles.editHint}>Tap to edit username</Text>
+          <Text style={[styles.profileName, { color: theme.colors.text }]}>
+            {user?.username || user?.email}
+          </Text>
+          <Text style={[styles.profileSubtitle, { color: theme.colors.textSecondary }]}>
+            Keep growing your tomatoes — one task at a time.
+          </Text>
+          <Text style={[styles.editHint, { color: theme.colors.textTertiary }]}>
+            Tap to edit username
+          </Text>
         </View>
       </TouchableOpacity>
 
       {user && (
         <>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Email</Text>
-            <Text style={styles.detailValue}>{user.email}</Text>
+          <View style={[styles.detailRow, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Email</Text>
+            <Text style={[styles.detailValue, { color: theme.colors.text }]}>{user.email}</Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Join Date</Text>
-            <Text style={styles.detailValue}>{new Date(user.createdAt).toLocaleDateString()}</Text>
+          <View style={[styles.detailRow, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Join Date</Text>
+            <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+              {new Date(user.createdAt).toLocaleDateString()}
+            </Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Tomatoes Earned</Text>
-            <Text style={styles.detailValue}>{totalTomatoes}</Text>
+          <View style={[styles.detailRow, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Tomatoes Earned</Text>
+            <Text style={[styles.detailValue, { color: theme.colors.text }]}>{totalTomatoes}</Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Theme</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <Text style={styles.detailValue}>{darkMode ? 'Dark' : 'Light'}</Text>
-              <Switch value={darkMode} onValueChange={onToggleDarkMode} />
+          <View style={[styles.detailRow, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Theme</Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  { borderColor: theme.colors.border },
+                  themeMode === 'light' && { 
+                    backgroundColor: theme.colors.actionBlue,
+                    borderColor: theme.colors.actionBlue 
+                  }
+                ]}
+                onPress={() => setThemeMode('light')}
+              >
+                <Text style={[
+                  styles.themeButtonText,
+                  { color: theme.colors.text },
+                  themeMode === 'light' && { color: theme.colors.white }
+                ]}>
+                  ☀️ Light
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  { borderColor: theme.colors.border },
+                  themeMode === 'dark' && { 
+                    backgroundColor: theme.colors.actionBlue,
+                    borderColor: theme.colors.actionBlue 
+                  }
+                ]}
+                onPress={() => setThemeMode('dark')}
+              >
+                <Text style={[
+                  styles.themeButtonText,
+                  { color: theme.colors.text },
+                  themeMode === 'dark' && { color: theme.colors.white }
+                ]}>
+                  🌙 Dark
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  { borderColor: theme.colors.border },
+                  themeMode === 'auto' && { 
+                    backgroundColor: theme.colors.actionBlue,
+                    borderColor: theme.colors.actionBlue 
+                  }
+                ]}
+                onPress={() => setThemeMode('auto')}
+              >
+                <Text style={[
+                  styles.themeButtonText,
+                  { color: theme.colors.text },
+                  themeMode === 'auto' && { color: theme.colors.white }
+                ]}>
+                  🔄 Auto
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </>
       )}
 
       {showEditor ? (
-        <View style={styles.formCard}>
+        <View style={[styles.formCard, { backgroundColor: theme.colors.surface }]}>
           <View style={styles.formHeader}>
-            <Text style={styles.sectionTitle}>Update Username</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Update Username
+            </Text>
             <TouchableOpacity onPress={() => setShowEditor(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: theme.colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.sectionSubtitle}>Choose a unique handle to personalize your garden.</Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
+            Choose a unique handle to personalize your garden.
+          </Text>
 
           <TextInput
-            style={[styles.input, error && styles.inputError]}
+            style={[
+              styles.input,
+              { 
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text 
+              },
+              error && { borderColor: theme.colors.danger }
+            ]}
             value={username}
             onChangeText={setUsername}
             placeholder="your_username"
-            placeholderTextColor={colors.gray400}
+            placeholderTextColor={theme.colors.textTertiary}
             autoCapitalize="none"
             editable={!isSaving}
           />
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          {success ? <Text style={styles.successText}>{success}</Text> : null}
+          {error ? <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text> : null}
+          {success ? <Text style={[styles.successText, { color: theme.colors.actionGreen }]}>{success}</Text> : null}
 
           <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.buttonDisabled]}
+            style={[
+              styles.saveButton,
+              { backgroundColor: theme.colors.primary },
+              isSaving && styles.buttonDisabled
+            ]}
             onPress={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveButtonText}>Save</Text>}
+            {isSaving ? (
+              <ActivityIndicator color={theme.colors.white} />
+            ) : (
+              <Text style={[styles.saveButtonText, { color: theme.colors.white }]}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
       ) : null}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-        <Text style={styles.logoutButtonText}>Sign out</Text>
+      <TouchableOpacity 
+        style={[styles.logoutButton, { backgroundColor: theme.colors.actionRed }]} 
+        onPress={onLogout}
+      >
+        <Text style={[styles.logoutButtonText, { color: theme.colors.white }]}>Sign out</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -170,7 +263,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundGray,
     paddingHorizontal: spacing.md,
     gap: spacing.md,
   },
@@ -181,13 +273,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
-    color: colors.gray900,
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.white,
     padding: spacing.md,
     borderRadius: 12,
     shadowColor: '#000',
@@ -199,21 +289,17 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     ...typography.h2,
-    color: colors.white,
   },
   profileName: {
     ...typography.h3,
-    color: colors.gray900,
   },
   profileSubtitle: {
     ...typography.body,
-    color: colors.gray600,
     marginTop: 4,
   },
   detailRow: {
@@ -221,7 +307,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.white,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -230,15 +315,22 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     ...typography.body,
-    color: colors.gray600,
   },
   detailValue: {
     ...typography.body,
-    color: colors.gray900,
     fontWeight: '700',
   },
+  themeButton: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  themeButtonText: {
+    ...typography.caption,
+    fontWeight: '600',
+  },
   formCard: {
-    backgroundColor: colors.white,
     padding: spacing.md,
     borderRadius: 12,
     shadowColor: '#000',
@@ -254,38 +346,27 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.gray900,
   },
   sectionSubtitle: {
     ...typography.body,
-    color: colors.gray600,
   },
   cancelText: {
     ...typography.body,
-    color: colors.gray600,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.gray300,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     ...typography.body,
-    color: colors.gray900,
-  },
-  inputError: {
-    borderColor: colors.danger,
   },
   errorText: {
     ...typography.caption,
-    color: colors.danger,
   },
   successText: {
     ...typography.caption,
-    color: colors.actionGreen,
   },
   saveButton: {
-    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: 10,
     alignItems: 'center',
@@ -294,7 +375,6 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...typography.button,
-    color: colors.white,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -303,15 +383,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: colors.gray900,
   },
   logoutButtonText: {
     ...typography.button,
-    color: colors.white,
   },
   editHint: {
     ...typography.caption,
-    color: colors.gray500,
     marginTop: 6,
   },
 });

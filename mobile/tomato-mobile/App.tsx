@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthContextProvider } from './src/context/AuthContext';
 import { TaskContextProvider } from './src/context/TaskContext';
 import { GardenContextProvider } from './src/context/GardenContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 const LoadingFallback = () => (
@@ -13,19 +14,31 @@ const LoadingFallback = () => (
   </View>
 );
 
+const AppContent = () => {
+  const { isDark } = useTheme();
+  
+  return (
+    <>
+      <Suspense fallback={<LoadingFallback />}>
+        <RootNavigator />
+      </Suspense>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+};
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthContextProvider>
-        <TaskContextProvider>
-          <GardenContextProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <RootNavigator />
-            </Suspense>
-            <StatusBar style="auto" />
-          </GardenContextProvider>
-        </TaskContextProvider>
-      </AuthContextProvider>
+      <ThemeProvider>
+        <AuthContextProvider>
+          <TaskContextProvider>
+            <GardenContextProvider>
+              <AppContent />
+            </GardenContextProvider>
+          </TaskContextProvider>
+        </AuthContextProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

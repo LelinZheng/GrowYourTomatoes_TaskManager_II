@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTasks } from '../../hooks/useTasks';
 import { Task, UpdateTaskRequest } from '../../types/Task';
-import { colors } from '../../styles/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
 
@@ -44,6 +44,7 @@ const formatTime = (date: Date) =>
   date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
 
 export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, onSuccess }) => {
+  const { theme } = useTheme();
   const { updateTask } = useTasks();
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(task.title);
@@ -94,26 +95,26 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
         {/* Header */}
         <View style={styles.header}>
           {onBack && (
             <TouchableOpacity onPress={onBack} style={styles.backButton}>
-              <Text style={styles.backButtonText}>← Back</Text>
+              <Text style={[styles.backButtonText, { color: theme.colors.primary }]}>← Back</Text>
             </TouchableOpacity>
           )}
-          <Text style={styles.headerTitle}>Edit Task</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Edit Task</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Title *</Text>
+            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Title *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.border }]}
               placeholder="Enter task title"
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textSecondary}
               value={title}
               onChangeText={setTitle}
               editable={!isLoading}
@@ -121,11 +122,11 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Description</Text>
+            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Description</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.border }]}
               placeholder="Add details about this task..."
-              placeholderTextColor={colors.gray400}
+              placeholderTextColor={theme.colors.textSecondary}
               value={description}
               onChangeText={setDescription}
               editable={!isLoading}
@@ -136,13 +137,13 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Priority *</Text>
+            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Priority *</Text>
             <View style={styles.priorityButtons}>
               <TouchableOpacity
                 style={[
                   styles.priorityButton,
-                  priority === 'LOW' && styles.priorityButtonActive,
-                  { borderColor: colors.priorityLow },
+                  priority === 'LOW' && { ...styles.priorityButtonActive, backgroundColor: theme.colors.success },
+                  { borderColor: theme.colors.success },
                 ]}
                 onPress={() => setPriority('LOW')}
                 disabled={isLoading}
@@ -150,7 +151,8 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
                 <Text
                   style={[
                     styles.priorityButtonText,
-                    priority === 'LOW' && { color: colors.white },
+                    { color: theme.colors.text },
+                    priority === 'LOW' && { color: theme.colors.white },
                   ]}
                 >
                   Low
@@ -160,8 +162,8 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
               <TouchableOpacity
                 style={[
                   styles.priorityButton,
-                  priority === 'MEDIUM' && styles.priorityButtonActive,
-                  { borderColor: colors.priorityMedium },
+                  priority === 'MEDIUM' && { ...styles.priorityButtonActive, backgroundColor: theme.colors.warning },
+                  { borderColor: theme.colors.warning },
                 ]}
                 onPress={() => setPriority('MEDIUM')}
                 disabled={isLoading}
@@ -169,7 +171,8 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
                 <Text
                   style={[
                     styles.priorityButtonText,
-                    priority === 'MEDIUM' && { color: colors.white },
+                    { color: theme.colors.text },
+                    priority === 'MEDIUM' && { color: theme.colors.white },
                   ]}
                 >
                   Medium
@@ -179,8 +182,8 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
               <TouchableOpacity
                 style={[
                   styles.priorityButton,
-                  priority === 'HIGH' && styles.priorityButtonActive,
-                  { borderColor: colors.priorityHigh },
+                  priority === 'HIGH' && { ...styles.priorityButtonActive, backgroundColor: theme.colors.danger },
+                  { borderColor: theme.colors.danger },
                 ]}
                 onPress={() => setPriority('HIGH')}
                 disabled={isLoading}
@@ -188,7 +191,8 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
                 <Text
                   style={[
                     styles.priorityButtonText,
-                    priority === 'HIGH' && { color: colors.white },
+                    { color: theme.colors.text },
+                    priority === 'HIGH' && { color: theme.colors.white },
                   ]}
                 >
                   High
@@ -198,14 +202,14 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Due Time (optional)</Text>
+            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Due Time (optional)</Text>
             
             <TouchableOpacity
-              style={styles.dateButton}
+              style={[styles.dateButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
               onPress={() => setShowDatePicker(true)}
               disabled={isLoading}
             >
-              <Text style={dueDate ? styles.dateButtonTextSelected : styles.dateButtonTextPlaceholder}>
+              <Text style={dueDate ? [styles.dateButtonTextSelected, { color: theme.colors.text }] : [styles.dateButtonTextPlaceholder, { color: theme.colors.textSecondary }]}>
                 {dueDate ? `${formatDate(dueDate)} • ${formatTime(dueDate)}` : 'Select Date & Time'}
               </Text>
             </TouchableOpacity>
@@ -279,7 +283,7 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
 
             {dueDate && (
               <View style={styles.selectedDateContainer}>
-                <Text style={styles.timeBombNote}>
+                <Text style={[styles.timeBombNote, { color: theme.colors.warning }]}>
                   ⏰ {formatDate(dueDate)} • {formatTime(dueDate)}
                 </Text>
                 <TouchableOpacity
@@ -290,7 +294,7 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
                   }}
                   style={styles.clearButton}
                 >
-                  <Text style={styles.clearButtonText}>Clear</Text>
+                  <Text style={[styles.clearButtonText, { color: theme.colors.danger }]}>Clear</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -300,14 +304,14 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
         {/* Actions */}
         <View style={styles.actions}>
           <TouchableOpacity
-            style={[styles.button, styles.saveButton, isLoading && styles.buttonDisabled]}
+            style={[styles.button, styles.saveButton, { backgroundColor: theme.colors.primary }, isLoading && styles.buttonDisabled]}
             onPress={handleUpdate}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color={theme.colors.white} />
             ) : (
-              <Text style={styles.buttonText}>Save Changes</Text>
+              <Text style={[styles.buttonText, { color: theme.colors.white }]}>Save Changes</Text>
             )}
           </TouchableOpacity>
 
@@ -317,7 +321,7 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
               onPress={onBack}
               disabled={isLoading}
             >
-              <Text style={[styles.buttonText, { color: colors.gray700 }]}>Cancel</Text>
+              <Text style={[styles.buttonText, { color: theme.colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -329,7 +333,6 @@ export const EditTaskScreen: React.FC<EditTaskScreenProps> = ({ task, onBack, on
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundGray,
   },
   content: {
     padding: spacing.md,
@@ -342,11 +345,9 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     ...typography.body,
-    color: colors.actionBlue,
   },
   headerTitle: {
     ...typography.h1,
-    color: colors.primary,
   },
   form: {
     marginBottom: spacing.xl,
@@ -357,34 +358,27 @@ const styles = StyleSheet.create({
   label: {
     ...typography.body,
     fontWeight: '600',
-    color: colors.gray900,
     marginBottom: spacing.sm,
   },
   helperText: {
     ...typography.caption,
-    color: colors.gray500,
     marginBottom: spacing.xs,
   },
   timeBombNote: {
     ...typography.caption,
-    color: colors.warning,
     marginTop: spacing.xs,
   },
   dateButton: {
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
   dateButtonTextPlaceholder: {
     ...typography.body,
-    color: colors.gray400,
   },
   dateButtonTextSelected: {
     ...typography.body,
-    color: colors.gray900,
   },
   selectedDateContainer: {
     flexDirection: 'row',
@@ -398,17 +392,13 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     ...typography.caption,
-    color: colors.danger,
   },
   input: {
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     ...typography.body,
-    color: colors.gray900,
   },
   textArea: {
     minHeight: 100,
@@ -424,14 +414,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     alignItems: 'center',
-    backgroundColor: colors.white,
   },
   priorityButtonActive: {
-    backgroundColor: colors.gray800,
   },
   priorityButtonText: {
     ...typography.button,
-    color: colors.gray700,
   },
   actions: {
     gap: spacing.md,
@@ -442,16 +429,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButton: {
-    backgroundColor: colors.actionBlue,
   },
   cancelButton: {
-    backgroundColor: colors.gray200,
+    backgroundColor: 'rgba(128,128,128,0.1)',
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
     ...typography.button,
-    color: colors.white,
   },
 });
