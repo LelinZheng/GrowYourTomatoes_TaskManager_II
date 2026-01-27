@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import { Punishment, PunishmentType } from '../../types/Punishment';
 import { TomatoPlant } from './TomatoPlant';
+import { FallingLeaves } from './FallingLeaves';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 
@@ -79,9 +80,6 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
 
   const plantSize = Math.max(0, Math.min(cellW, cellH) * 0.92);
   const plantHeight = cellH;
-
-  const leafEmojisPerRow = Math.ceil(screenWidth / 16);
-  const leafEmojis = Array(leafEmojisPerRow).fill('🍂').join('');
 
   const scatterPositions = useMemo(() => {
     const map = new Map<number, { left: string; bottom: number }>();
@@ -199,18 +197,6 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
             </View>
           ))}
 
-        {leaves.map((_, idx) => (
-          <Text
-            key={`leaf-${idx}`}
-            style={[
-              styles.leafStrip,
-              { opacity: Math.max(0.35, 0.95 - idx * 0.15), bottom: 2 + idx * 6 },
-            ]}
-          >
-            {leafEmojis}
-          </Text>
-        ))}
-
         {scattered.map((p) => {
           const pos = scatterPositions.get(p.id) || { left: '50%', bottom: 6 };
           const emoji = p.type === 'BUG' ? '🐛' : '🍄';
@@ -240,6 +226,14 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
           );
         })}
       </View>
+
+      {leaves.length > 0 && (
+        <FallingLeaves 
+          count={leaves.length} 
+          gardenHeight={viewportH} 
+          soilHeight={SOIL_HEIGHT}
+        />
+      )}
 
       {fogs.map((_, idx) => (
         <View key={`fog-${idx}`} pointerEvents="none" style={[styles.fogLayer, { opacity: Math.min(0.75, 0.22 + idx * 0.12) }]} />
@@ -293,13 +287,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: WEED_ROW_HEIGHT + WEED_STICK_OUT,
     width: '100%',
-  },
-  leafStrip: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    fontSize: 22,
-    textAlign: 'center',
   },
   scatter: { position: 'absolute', fontSize: 28 },
   fogLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff', zIndex: 20 },
