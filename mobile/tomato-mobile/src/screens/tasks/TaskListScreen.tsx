@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTitle: {
-    ...typography.h1,
+    ...typography.appTitle,
   },
   createButton: {
     paddingHorizontal: spacing.md,

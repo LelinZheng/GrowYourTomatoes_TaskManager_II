@@ -21,6 +21,13 @@ export const typography = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 24,
   },
+  // Modern app title style - clean, friendly, mobile-native
+  appTitle: {
+    fontSize: 26,
+    fontWeight: '600',
+    lineHeight: 32,
+    letterSpacing: -0.5,
+  },
   body: {
     fontSize: 15,
     fontWeight: '400',
