@@ -11,12 +11,12 @@ import { spacing } from '../../styles/spacing';
 const { width: screenWidth } = Dimensions.get('window');
 
 const COLS = 2;
-const ROWS = 2;
+const ROWS = 3;
 
 const H_PADDING = spacing.md;
-const GAP = spacing.sm;
+const GAP = spacing.xs;
 
-const SOIL_HEIGHT = 66;
+const SOIL_HEIGHT = 50;
 
 const WEED_ROW_HEIGHT = 20;
 const WEED_ROW_GAP = 14;
@@ -73,12 +73,12 @@ export const GardenCanvas: React.FC<GardenCanvasProps> = ({
 
   const cellW = (screenWidth - H_PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
-  const gridTop = 6;
-  const gridBottom = 6;
+  const gridTop = 4;
+  const gridBottom = 2;
   const gridAreaH = Math.max(0, viewportH - SOIL_HEIGHT - gridTop - gridBottom);
   const cellH = Math.floor((gridAreaH - GAP * (ROWS - 1)) / ROWS);
 
-  const plantSize = Math.max(0, Math.min(cellW, cellH) * 0.92);
+  const plantSize = Math.max(0, Math.min(cellW, cellH) * 0.75);
   const plantHeight = cellH;
 
   const scatterPositions = useMemo(() => {

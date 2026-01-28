@@ -5,6 +5,7 @@ import { Task } from '../../types/Task';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../styles/spacing';
 import { typography } from '../../styles/typography';
+import { formatters } from '../../utils/formatters';
 
 interface TaskCardProps {
   task: Task;
@@ -12,13 +13,6 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onDelete: (taskId: number) => void;
 }
-
-const formatDue = (dateString: string) => {
-  const date = new Date(dateString);
-  const datePart = date.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
-  const timePart = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
-  return `${datePart}, ${timePart}`;
-};
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, onDelete }) => {
   const { theme } = useTheme();
@@ -122,33 +116,47 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
             },
           ]}
         >
-          <View style={styles.header}>
-            <View style={styles.titleRow}>
-              <Text style={[
-                styles.title,
-                { color: theme.colors.text },
-                task.completed && { 
-                  textDecorationLine: 'line-through',
-                  color: theme.colors.textTertiary 
-                }
-              ]}>
-                {task.title}
-              </Text>
-              <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor() }]}>
-                <Text style={styles.priorityText}>{task.priority}</Text>
-              </View>
+          {/* Delete X icon in top-right corner */}
+          <TouchableOpacity
+            style={styles.deleteIcon}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            accessibilityLabel="Delete task"
+            accessibilityRole="button"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={[styles.deleteIconText, { color: theme.colors.textSecondary }]}>✕</Text>
+          </TouchableOpacity>
+
+          {/* Row 1: Priority badge (top-left) */}
+          <View style={styles.row1}>
+            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor() }]}>
+              <Text style={styles.priorityText}>{task.priority}</Text>
             </View>
-            {task.description && (
-              <Text style={[
-                styles.description,
-                { color: theme.colors.textSecondary },
-                task.completed && { color: theme.colors.textTertiary }
-              ]} numberOfLines={2}>
-                {task.description}
-              </Text>
-            )}
-            {task.dueTime && (
-              <View style={styles.dueTimeContainer}>
+          </View>
+
+          {/* Row 2: Title (single line with ellipsis) */}
+          <Text 
+            style={[
+              styles.title,
+              { color: theme.colors.text },
+              task.completed && { 
+                textDecorationLine: 'line-through',
+                color: theme.colors.textTertiary 
+              }
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {task.title}
+          </Text>
+
+          {/* Row 3: Due time on left, Complete button on right */}
+          <View style={styles.row3}>
+            <View style={styles.leftInfo}>
+              {task.dueTime && (
                 <Text style={[
                   styles.dueTime,
                   { color: theme.colors.textSecondary },
@@ -157,33 +165,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
                     fontWeight: '600' 
                   }
                 ]}>
-                  ⏰ Due: {formatDue(task.dueTime)}
+                  ⏰ {formatters.formatRelativeDueTime(task.dueTime)}
                 </Text>
-                {task.expired && (
-                  <Text style={[styles.expiredLabel, { color: theme.colors.danger }]}>
-                    EXPIRED
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: theme.colors.actionRed }]}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-            >
-              <Text style={[styles.buttonText, { color: theme.colors.white }]}>
-                Delete
-              </Text>
-            </TouchableOpacity>
-
+              )}
+              {task.expired && (
+                <Text style={[styles.expiredLabel, { color: theme.colors.danger }]}>
+                  EXPIRED
+                </Text>
+              )}
+            </View>
+            
             {!task.completed && (
               <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.colors.actionBlue }]}
+                style={[styles.completeButton, { backgroundColor: theme.colors.actionBlue }]}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleComplete();
@@ -203,75 +197,88 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onEdit, on
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 6,
-    padding: spacing.sm,
-    marginBottom: spacing.xs,
-    borderWidth: 1,
+    borderRadius: 4,
+    padding: spacing.xs,
+    paddingTop: spacing.sm,
+    marginBottom: 2,
+    borderWidth: 0.5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 0.5 },
+    shadowOpacity: 0.03,
+    shadowRadius: 1,
+    elevation: 0.5,
+    position: 'relative',
   },
-  header: {
-    marginBottom: spacing.sm,
+  deleteIcon: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
-  titleRow: {
+  deleteIconText: {
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  row1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  row3: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs / 2,
+    marginTop: 3,
+  },
+  leftInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   title: {
     fontSize: 14,
     fontWeight: '600',
-    flex: 1,
-    marginRight: spacing.xs,
-  },
-  description: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  dueTimeContainer: {
-    marginTop: spacing.xs / 2,
+    paddingRight: 32,
   },
   dueTime: {
     fontSize: 12,
   },
   expiredLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    marginTop: spacing.xs / 2,
   },
   priorityBadge: {
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     borderRadius: 3,
   },
   priorityText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  button: {
-    width: '24%',
+  completeButton: {
     paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 3,
     alignItems: 'center',
+    minWidth: 70,
   },
   buttonText: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '600',
   },
   swipeAction: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 100,
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
   swipeActionText: {
     color: '#FFFFFF',

@@ -59,7 +59,7 @@ export const GardenScreen: React.FC = () => {
         {
           backgroundColor: theme.colors.background,
           paddingTop: spacing.md + insets.top,
-          paddingBottom: spacing.md + insets.bottom,
+          paddingBottom: spacing.xs + insets.bottom,
         },
       ]}
     >
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     paddingHorizontal: spacing.md,
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   title: {
     fontSize: 24,
